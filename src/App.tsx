@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+<<<<<<< HEAD
+=======
+  GitBranch,
+>>>>>>> dcf5a6c (Update project files)
   Code2,
-  Sparkles,
   Target,
   Activity,
   Layers,
   Info,
+<<<<<<< HEAD
   User,
   Camera,
   CheckCircle2,
@@ -89,8 +93,134 @@ function FaceImage({
       ctx.drawImage(offscreen, 0, 0, size, size);
     }
   }, [pixels, size]);
+=======
+  TreePine,
+  Shield,
+  CheckCircle2,
+  XCircle,
+} from 'lucide-react';
+import {
+  generateBreastCancerData,
+  buildDecisionTree,
+  predict,
+  computeFeatureImportance,
+  computeConfusionMatrix,
+  computeAccuracy,
+  FEATURE_NAMES,
+  TARGET_NAMES,
+  CLASS_COLORS,
+  type TreeNode,
+} from './data/breastCancerData';
 
+
+
+const CODE_SNIPPET = `from sklearn.datasets import load_breast_cancer
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+X, y = load_breast_cancer(return_X_y=True)
+feature_names = load_breast_cancer().feature_names
+target_names = load_breast_cancer().target_names
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.1, random_state=42
+)
+
+clf = DecisionTreeClassifier(random_state=42)
+clf.fit(X_train, y_train)
+
+print("Accuracy:", round(
+    accuracy_score(y_test, clf.predict(X_test)), 2
+))
+
+plt.figure(figsize=(20, 10))
+plot_tree(
+    clf,
+    feature_names=feature_names,
+    class_names=target_names,
+    filled=True,
+    rounded=True
+)
+plt.show()`;
+
+// Render tree node as SVG group
+function TreeNodeCard({
+  node,
+  x,
+  y,
+  level,
+  expanded,
+  toggleNode,
+}: {
+  node: TreeNode;
+  x: number;
+  y: number;
+  level: number;
+  expanded: Set<string>;
+  toggleNode: (id: string) => void;
+}) {
+  const nodeId = `${level}-${x}-${y}`;
+  const isExpanded = expanded.has(nodeId);
+  const predColor = node.prediction === 0 ? CLASS_COLORS[0] : CLASS_COLORS[1];
+  const predName = TARGET_NAMES[node.prediction!];
+
+  // Node dimensions
+  const nodeWidth = 150;
+  const nodeHeight = 70;
+
+  if (node.isLeaf) {
+    return (
+      <g transform={`translate(${x}, ${y})`}>
+        <rect
+          x={-nodeWidth / 2}
+          y={-nodeHeight / 2}
+          width={nodeWidth}
+          height={nodeHeight}
+          rx={8}
+          fill={predColor}
+          opacity={0.15}
+          stroke={predColor}
+          strokeWidth={1.5}
+        />
+        <text
+          x={0}
+          y={-12}
+          textAnchor="middle"
+          fill="white"
+          fontSize="11"
+          fontWeight="600"
+        >
+          {predName}
+        </text>
+        <text
+          x={0}
+          y={4}
+          textAnchor="middle"
+          fill="rgba(255,255,255,0.6)"
+          fontSize="9"
+          fontFamily="monospace"
+        >
+          samples: {node.samples}
+        </text>
+        <text
+          x={0}
+          y={18}
+          textAnchor="middle"
+          fill="rgba(255,255,255,0.5)"
+          fontSize="9"
+          fontFamily="monospace"
+        >
+          [{node.value![0]}, {node.value![1]}]
+        </text>
+      </g>
+    );
+  }
+>>>>>>> dcf5a6c (Update project files)
+
+  // Internal node
   return (
+<<<<<<< HEAD
     <div
       className={`group relative overflow-hidden rounded-lg border transition ${
         isCorrect === undefined
@@ -179,11 +309,208 @@ function ProbabilityBar({
         </div>
       ))}
     </div>
+=======
+    <g
+      transform={`translate(${x}, ${y})`}
+      style={{ cursor: 'pointer' }}
+      onClick={() => toggleNode(nodeId)}
+    >
+      <rect
+        x={-nodeWidth / 2}
+        y={-nodeHeight / 2}
+        width={nodeWidth}
+        height={nodeHeight}
+        rx={8}
+        fill={predColor}
+        opacity={0.1}
+        stroke={predColor}
+        strokeWidth={1.5}
+      />
+      <text
+        x={0}
+        y={-18}
+        textAnchor="middle"
+        fill="white"
+        fontSize="10"
+        fontWeight="600"
+      >
+        {node.featureName!.length > 18
+          ? node.featureName!.slice(0, 16) + '…'
+          : node.featureName}
+      </text>
+      <text
+        x={0}
+        y={-3}
+        textAnchor="middle"
+        fill={predColor}
+        fontSize="10"
+        fontFamily="monospace"
+        fontWeight="600"
+      >
+        ≤ {node.threshold!.toFixed(2)}
+      </text>
+      <text
+        x={0}
+        y={12}
+        textAnchor="middle"
+        fill="rgba(255,255,255,0.6)"
+        fontSize="9"
+        fontFamily="monospace"
+      >
+        gini: {node.gini!.toFixed(3)}
+      </text>
+      <text
+        x={0}
+        y={26}
+        textAnchor="middle"
+        fill="rgba(255,255,255,0.5)"
+        fontSize="9"
+        fontFamily="monospace"
+      >
+        samples: {node.samples}
+      </text>
+      {/* Expand/collapse indicator */}
+      <circle
+        cx={nodeWidth / 2 - 12}
+        cy={0}
+        r={7}
+        fill={predColor}
+        opacity={0.3}
+      />
+      <text
+        x={nodeWidth / 2 - 12}
+        y={3}
+        textAnchor="middle"
+        fill="white"
+        fontSize="9"
+        fontWeight="bold"
+      >
+        {isExpanded ? '−' : '+'}
+      </text>
+    </g>
+  );
+}
+
+// Compute layout positions for tree nodes
+function computeTreeLayout(tree: TreeNode): {
+  positions: Map<string, { x: number; y: number; node: TreeNode; level: number }>;
+  width: number;
+  height: number;
+} {
+  const positions = new Map<
+    string,
+    { x: number; y: number; node: TreeNode; level: number }
+  >();
+  let maxLevel = 0;
+  let leafCounter = 0;
+
+  // First pass: count leaves for width
+  function countLeaves(node: TreeNode): number {
+    if (node.isLeaf) return 1;
+    return countLeaves(node.left!) + countLeaves(node.right!);
+  }
+
+  const totalLeaves = countLeaves(tree);
+  const horizontalSpacing = 180;
+  const verticalSpacing = 130;
+
+  // Assign positions
+  function assignPositions(
+    node: TreeNode,
+    level: number,
+    leftLeaf: number,
+    rightLeaf: number
+  ) {
+    if (node.isLeaf) {
+      const nodeId = `${level}-${leafCounter}`;
+      const x = (leftLeaf + 0.5) * horizontalSpacing;
+      const y = level * verticalSpacing + 50;
+      positions.set(nodeId, { x, y, node, level });
+      leafCounter++;
+      maxLevel = Math.max(maxLevel, level);
+      return;
+    }
+
+    const leftLeaves = countLeaves(node.left!);
+    const rightLeaves = countLeaves(node.right!);
+
+    // Position this node between its children's range
+    const nodeId = `${level}-${leftLeaf}`;
+    const y = level * verticalSpacing + 50;
+
+    // Recalculate x based on children's positions
+    const myX = (leftLeaf + (leftLeaves + rightLeaves) / 2) * horizontalSpacing;
+    positions.set(nodeId, { x: myX, y, node, level });
+
+    assignPositions(node.left!, level + 1, leftLeaf, leftLeaf + leftLeaves);
+    assignPositions(node.right!, level + 1, leftLeaf + leftLeaves, rightLeaf);
+    maxLevel = Math.max(maxLevel, level);
+  }
+
+  assignPositions(tree, 0, 0, totalLeaves);
+
+  // Compute width and height
+  let maxX = 0;
+  let maxY = 0;
+  positions.forEach((p) => {
+    maxX = Math.max(maxX, p.x);
+    maxY = Math.max(maxY, p.y);
+  });
+
+  return {
+    positions,
+    width: maxX + 200,
+    height: maxY + 100,
+  };
+}
+
+// Tree edge component
+function TreeEdge({
+  fromX,
+  fromY,
+  toX,
+  toY,
+  label,
+  color,
+}: {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  label?: string;
+  color: string;
+}) {
+  const fromYOffset = fromY + 35;
+  const toYOffset = toY - 35;
+  return (
+    <g>
+      <path
+        d={`M ${fromX} ${fromYOffset} C ${fromX} ${(fromYOffset + toYOffset) / 2}, ${toX} ${(fromYOffset + toYOffset) / 2}, ${toX} ${toYOffset}`}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        opacity={0.5}
+      />
+      {label && (
+        <text
+          x={(fromX + toX) / 2}
+          y={(fromYOffset + toYOffset) / 2 - 5}
+          textAnchor="middle"
+          fill={color}
+          fontSize="10"
+          fontWeight="600"
+        >
+          {label}
+        </text>
+      )}
+    </g>
+>>>>>>> dcf5a6c (Update project files)
   );
 }
 
 export default function App() {
   const [showCode, setShowCode] = useState(false);
+<<<<<<< HEAD
   const [selectedIdx, setSelectedIdx] = useState(0);
   const numSubjects = 10;
 
@@ -270,11 +597,100 @@ export default function App() {
     }
     return means;
   }, [train, numSubjects]);
+=======
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [selectedSampleIdx, setSelectedSampleIdx] = useState(0);
+
+  // Generate data
+  const allData = useMemo(() => generateBreastCancerData(), []);
+  
+  // Split data
+  const { train, test } = useMemo(() => {
+    const testSize = Math.floor(allData.length * 0.1);
+    return {
+      train: allData.slice(testSize),
+      test: allData.slice(0, testSize),
+    };
+  }, [allData]);
+
+  // Build tree
+  const tree = useMemo(() => buildDecisionTree(train, 4, 5), [train]);
+
+  // Stats
+  const accuracy = useMemo(() => computeAccuracy(tree, test), [tree, test]);
+  const confusionMatrix = useMemo(
+    () => computeConfusionMatrix(tree, test),
+    [tree, test]
+  );
+  const featureImportance = useMemo(
+    () => computeFeatureImportance(tree),
+    [tree]
+  );
+
+  // Top features
+  const topFeatures = useMemo(() => {
+    const arr = Array.from(featureImportance.entries())
+      .map(([idx, imp]) => ({ idx, imp, name: FEATURE_NAMES[idx] }))
+      .sort((a, b) => b.imp - a.imp)
+      .slice(0, 8);
+    const maxImp = Math.max(...arr.map((f) => f.imp), 1);
+    return arr.map((f) => ({ ...f, normalized: f.imp / maxImp }));
+  }, [featureImportance]);
+
+  // Tree layout
+  const layout = useMemo(() => computeTreeLayout(tree), [tree]);
+
+  // Count nodes
+  const countNodes = (node: TreeNode): number => {
+    if (node.isLeaf) return 1;
+    return 1 + countNodes(node.left!) + countNodes(node.right!);
+  };
+  const countLeaves = (node: TreeNode): number => {
+    if (node.isLeaf) return 1;
+    return countLeaves(node.left!) + countLeaves(node.right!);
+  };
+
+  const totalNodes = countNodes(tree);
+  const totalLeaves = countLeaves(tree);
+
+  const toggleNode = (id: string) => {
+    setExpandedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Auto-expand root's children
+  const currentSample = allData[selectedSampleIdx];
+  const prediction = predict(tree, currentSample.features);
+  const isCorrect = prediction === currentSample.label;
+
+  // Find decision path
+  const decisionPath = useMemo(() => {
+    const path: { feature: string; threshold: number; direction: 'left' | 'right'; value: number }[] = [];
+    let node: TreeNode | undefined = tree;
+    while (node && !node.isLeaf) {
+      const val: number = currentSample.features[node.featureIndex!];
+      const dir: 'left' | 'right' = val <= node.threshold! ? 'left' : 'right';
+      path.push({
+        feature: node.featureName!,
+        threshold: node.threshold!,
+        direction: dir,
+        value: val,
+      });
+      node = dir === 'left' ? node.left : node.right;
+    }
+    return path;
+  }, [tree, currentSample]);
+>>>>>>> dcf5a6c (Update project files)
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#1a0f08] text-white">
       {/* Animated gradient background orbs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
+<<<<<<< HEAD
         <div className="absolute -top-40 -left-40 h-96 w-96 animate-pulse rounded-full bg-amber-600/15 blur-3xl" />
         <div
           className="absolute top-1/3 -right-40 h-96 w-96 animate-pulse rounded-full bg-orange-600/15 blur-3xl"
@@ -282,6 +698,15 @@ export default function App() {
         />
         <div
           className="absolute -bottom-40 left-1/3 h-96 w-96 animate-pulse rounded-full bg-rose-600/15 blur-3xl"
+=======
+        <div className="absolute -top-40 -left-40 h-96 w-96 animate-pulse rounded-full bg-rose-600/15 blur-3xl" />
+        <div
+          className="absolute top-1/3 -right-40 h-96 w-96 animate-pulse rounded-full bg-teal-600/15 blur-3xl"
+          style={{ animationDelay: '1s' }}
+        />
+        <div
+          className="absolute -bottom-40 left-1/3 h-96 w-96 animate-pulse rounded-full bg-purple-600/15 blur-3xl"
+>>>>>>> dcf5a6c (Update project files)
           style={{ animationDelay: '2s' }}
         />
       </div>
@@ -300,6 +725,7 @@ export default function App() {
         {/* Header */}
         <header className="border-b border-white/5 bg-black/40">
           <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
+<<<<<<< HEAD
             <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500">
               <Fingerprint
                 className="h-5 w-5 text-white"
@@ -312,6 +738,17 @@ export default function App() {
               </h1>
               <p className="text-xs text-white/50">
                 Gaussian Naive Bayes · Olivetti Faces
+=======
+            <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 via-pink-500 to-teal-500">
+              <TreePine className="h-5 w-5 text-white" strokeWidth={2.5} />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold tracking-tight">
+                Decision Tree Classifier
+              </h1>
+              <p className="text-xs text-white/50">
+                Breast Cancer Dataset · Interactive Tree Visualization
+>>>>>>> dcf5a6c (Update project files)
               </p>
             </div>
             <button
@@ -326,6 +763,7 @@ export default function App() {
 
         <main className="mx-auto max-w-7xl px-6 py-8">
           {/* Hero */}
+<<<<<<< HEAD
           <div className="group relative mb-8 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-rose-900/30 p-8">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-rose-400 to-transparent" />
@@ -347,10 +785,33 @@ export default function App() {
                   grayscale image. The model assumes pixel values follow a
                   Gaussian distribution per class and uses Bayes' theorem to
                   classify.
+=======
+          <div className="group relative mb-8 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-rose-900/30 via-pink-900/20 to-teal-900/30 p-8">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-400 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-teal-400 to-transparent" />
+
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-2xl">
+                <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-rose-400/30 bg-rose-500/10 px-3 py-1 text-[11px] font-medium text-rose-300">
+                  <Shield className="h-3 w-3" /> Classification
+                </div>
+                <h2 className="text-3xl font-bold leading-tight md:text-4xl">
+                  Classifying tumors with{' '}
+                  <span className="bg-gradient-to-r from-rose-400 via-pink-400 to-teal-400 bg-clip-text text-transparent">
+                    decision trees
+                  </span>
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-white/70">
+                  A decision tree recursively splits the data by choosing the
+                  feature and threshold that best separate the classes using{' '}
+                  <span className="font-semibold text-rose-300">Gini impurity</span>.
+                  Explore the tree structure and see how predictions are made.
+>>>>>>> dcf5a6c (Update project files)
                 </p>
               </div>
               <div className="flex gap-3 lg:flex-col">
                 <div className="flex-1 rounded-xl border border-white/10 bg-black/40 px-5 py-4 lg:min-w-[140px]">
+<<<<<<< HEAD
                   <p className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-3xl font-bold text-transparent">
                     {allFaces.length}
                   </p>
@@ -365,6 +826,22 @@ export default function App() {
                 <div className="flex-1 rounded-xl border border-white/10 bg-black/40 px-5 py-4 lg:min-w-[140px]">
                   <p className="bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-3xl font-bold text-transparent">
                     {(acc * 100).toFixed(0)}%
+=======
+                  <p className="bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-3xl font-bold text-transparent">
+                    569
+                  </p>
+                  <p className="text-xs text-white/50">Samples</p>
+                </div>
+                <div className="flex-1 rounded-xl border border-white/10 bg-black/40 px-5 py-4 lg:min-w-[140px]">
+                  <p className="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-3xl font-bold text-transparent">
+                    30
+                  </p>
+                  <p className="text-xs text-white/50">Features</p>
+                </div>
+                <div className="flex-1 rounded-xl border border-white/10 bg-black/40 px-5 py-4 lg:min-w-[140px]">
+                  <p className="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-3xl font-bold text-transparent">
+                    {(accuracy * 100).toFixed(0)}%
+>>>>>>> dcf5a6c (Update project files)
                   </p>
                   <p className="text-xs text-white/50">Accuracy</p>
                 </div>
@@ -372,6 +849,7 @@ export default function App() {
             </div>
           </div>
 
+<<<<<<< HEAD
           {/* Sample Gallery (2×5 grid like matplotlib) */}
           <div className="rounded-2xl border border-white/10 bg-black/40 p-6">
             <div className="mb-4 flex items-center justify-between">
@@ -394,10 +872,35 @@ export default function App() {
                 <div className="flex items-center gap-1.5">
                   <div className="h-2 w-2 rounded-full bg-rose-500" />
                   <span className="text-white/70">Wrong</span>
+=======
+          {/* Main tree visualization */}
+          <div className="rounded-2xl border border-white/10 bg-black/40 p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500/20 to-teal-500/20 ring-1 ring-rose-400/30">
+                  <GitBranch className="h-4 w-4 text-rose-300" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold">Decision Tree</h3>
+                  <p className="text-xs text-white/50">
+                    {totalNodes} nodes · {totalLeaves} leaves · max depth 4
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-rose-500" />
+                  <span className="text-white/70">Malignant</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-teal-500" />
+                  <span className="text-white/70">Benign</span>
+>>>>>>> dcf5a6c (Update project files)
                 </div>
               </div>
             </div>
 
+<<<<<<< HEAD
             <div className="grid grid-cols-5 gap-2 sm:grid-cols-5 md:gap-3">
               {first10Test.map((face, i) => (
                 <FaceImage
@@ -579,11 +1082,165 @@ export default function App() {
                       setSelectedIdx(parseInt(e.target.value))
                     }
                     className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-amber-500"
+=======
+            <div className="overflow-auto rounded-xl border border-white/5 bg-black/40 p-4">
+              <svg
+                width={layout.width}
+                height={layout.height}
+                className="min-w-full"
+              >
+                {/* Draw edges first */}
+                {Array.from(layout.positions.entries()).map(([id, pos]) => {
+                  if (pos.node.isLeaf) return null;
+                  const children: [TreeNode, string][] = [];
+                  if (pos.node.left)
+                    children.push([pos.node.left, `${pos.level + 1}-L`]);
+                  if (pos.node.right)
+                    children.push([pos.node.right, `${pos.level + 1}-R`]);
+
+                  // Find left and right child positions
+                  const leftChildId = Array.from(layout.positions.keys()).find(
+                    (k) => {
+                      const p = layout.positions.get(k)!;
+                      return (
+                        p.level === pos.level + 1 &&
+                        p.x < pos.x + 10 &&
+                        p.node === pos.node.left
+                      );
+                    }
+                  );
+                  const rightChildId = Array.from(layout.positions.keys()).find(
+                    (k) => {
+                      const p = layout.positions.get(k)!;
+                      return (
+                        p.level === pos.level + 1 &&
+                        p.x > pos.x - 10 &&
+                        p.node === pos.node.right
+                      );
+                    }
+                  );
+
+                  return (
+                    <g key={`edges-${id}`}>
+                      {leftChildId && (
+                        <TreeEdge
+                          fromX={pos.x}
+                          fromY={pos.y}
+                          toX={layout.positions.get(leftChildId)!.x}
+                          toY={layout.positions.get(leftChildId)!.y}
+                          label="Yes"
+                          color={CLASS_COLORS[pos.node.prediction!]}
+                        />
+                      )}
+                      {rightChildId && (
+                        <TreeEdge
+                          fromX={pos.x}
+                          fromY={pos.y}
+                          toX={layout.positions.get(rightChildId)!.x}
+                          toY={layout.positions.get(rightChildId)!.y}
+                          label="No"
+                          color={CLASS_COLORS[pos.node.prediction!]}
+                        />
+                      )}
+                    </g>
+                  );
+                })}
+
+                {/* Draw nodes */}
+                {Array.from(layout.positions.entries()).map(([id, pos]) => (
+                  <TreeNodeCard
+                    key={id}
+                    node={pos.node}
+                    x={pos.x}
+                    y={pos.y}
+                    level={pos.level}
+                    expanded={expandedNodes}
+                    toggleNode={toggleNode}
+                  />
+                ))}
+              </svg>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {/* Confusion Matrix */}
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
+              <div className="mb-3 flex items-center gap-2">
+                <Target className="h-4 w-4 text-rose-400" />
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
+                  Confusion Matrix
+                </h3>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <div />
+                <div className="text-center text-[10px] text-rose-400">
+                  Pred: M
+                </div>
+                <div className="text-center text-[10px] text-teal-400">
+                  Pred: B
+                </div>
+                <div className="flex items-center text-[10px] text-rose-400">
+                  Actual: M
+                </div>
+                <div
+                  className="rounded-lg border border-rose-500/30 bg-rose-500/15 p-3 text-center"
+                  title="True Positives"
+                >
+                  <p className="font-mono text-xl font-bold text-rose-300">
+                    {confusionMatrix[0][0]}
+                  </p>
+                  <p className="text-[9px] text-rose-400/70">TP</p>
+                </div>
+                <div
+                  className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-center"
+                  title="False Negatives"
+                >
+                  <p className="font-mono text-xl font-bold text-white/60">
+                    {confusionMatrix[0][1]}
+                  </p>
+                  <p className="text-[9px] text-white/40">FN</p>
+                </div>
+                <div className="flex items-center text-[10px] text-teal-400">
+                  Actual: B
+                </div>
+                <div
+                  className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-center"
+                  title="False Positives"
+                >
+                  <p className="font-mono text-xl font-bold text-white/60">
+                    {confusionMatrix[1][0]}
+                  </p>
+                  <p className="text-[9px] text-white/40">FP</p>
+                </div>
+                <div
+                  className="rounded-lg border border-teal-500/30 bg-teal-500/15 p-3 text-center"
+                  title="True Negatives"
+                >
+                  <p className="font-mono text-xl font-bold text-teal-300">
+                    {confusionMatrix[1][1]}
+                  </p>
+                  <p className="text-[9px] text-teal-400/70">TN</p>
+                </div>
+              </div>
+              <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.02] p-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/60">Overall Accuracy</span>
+                  <span className="bg-gradient-to-r from-rose-400 to-teal-400 bg-clip-text font-mono font-bold text-transparent">
+                    {(accuracy * 100).toFixed(1)}%
+                  </span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-rose-500 to-teal-500"
+                    style={{ width: `${accuracy * 100}%` }}
+>>>>>>> dcf5a6c (Update project files)
                   />
                 </div>
               </div>
             </div>
 
+<<<<<<< HEAD
             {/* Stats */}
             <div className="space-y-6">
               {/* Accuracy */}
@@ -618,8 +1275,38 @@ export default function App() {
                     <p className="text-[10px] text-white/50">Wrong</p>
                   </div>
                 </div>
+=======
+            {/* Feature Importance */}
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-5 lg:col-span-2">
+              <div className="mb-3 flex items-center gap-2">
+                <Activity className="h-4 w-4 text-purple-400" />
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
+                  Top Feature Importance
+                </h3>
+>>>>>>> dcf5a6c (Update project files)
               </div>
+              <div className="space-y-2">
+                {topFeatures.map((f) => (
+                  <div key={f.idx}>
+                    <div className="mb-1 flex items-center justify-between text-xs">
+                      <span className="truncate text-white/80">{f.name}</span>
+                      <span className="ml-2 font-mono text-white/50">
+                        {f.imp.toFixed(3)}
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-rose-500 via-purple-500 to-teal-500"
+                        style={{ width: `${f.normalized * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
+<<<<<<< HEAD
               {/* Per-class accuracy */}
               <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
                 <div className="mb-3 flex items-center gap-2">
@@ -662,10 +1349,78 @@ export default function App() {
                 </h3>
                 <p className="text-xs text-white/50">
                   Average appearance learned by the model
-                </p>
+=======
+          {/* Sample Explorer */}
+          <div className="mt-6 rounded-2xl border border-white/10 bg-black/40 p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 ring-1 ring-purple-400/30">
+                  <Layers className="h-4 w-4 text-purple-300" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold">Sample Explorer</h3>
+                  <p className="text-xs text-white/50">
+                    Trace a prediction through the tree
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() =>
+                    setSelectedSampleIdx((s) => Math.max(0, s - 1))
+                  }
+                  disabled={selectedSampleIdx === 0}
+                  className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10 disabled:opacity-30"
+                >
+                  ← Prev
+                </button>
+                <span className="font-mono text-xs text-white/50">
+                  {selectedSampleIdx + 1} / {allData.length}
+                </span>
+                <button
+                  onClick={() =>
+                    setSelectedSampleIdx((s) =>
+                      Math.min(allData.length - 1, s + 1)
+                    )
+                  }
+                  disabled={selectedSampleIdx === allData.length - 1}
+                  className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10 disabled:opacity-30"
+                >
+                  Next →
+                </button>
               </div>
             </div>
 
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {/* Actual Label */}
+              <div
+                className="rounded-xl border p-4"
+                style={{
+                  borderColor: `${CLASS_COLORS[currentSample.label]}50`,
+                  backgroundColor: `${CLASS_COLORS[currentSample.label]}10`,
+                }}
+              >
+                <p className="text-[10px] uppercase tracking-wider text-white/40">
+                  Actual Diagnosis
+>>>>>>> dcf5a6c (Update project files)
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  {currentSample.label === 0 ? (
+                    <XCircle className="h-5 w-5 text-rose-400" />
+                  ) : (
+                    <CheckCircle2 className="h-5 w-5 text-teal-400" />
+                  )}
+                  <span
+                    className="text-lg font-bold capitalize"
+                    style={{ color: CLASS_COLORS[currentSample.label] }}
+                  >
+                    {TARGET_NAMES[currentSample.label]}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+<<<<<<< HEAD
             <div
               className="grid gap-2"
               style={{ gridTemplateColumns: `repeat(${numSubjects}, 1fr)` }}
@@ -760,7 +1515,117 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded bg-rose-500/40" />
                 <span className="text-white/60">Off-diagonal = Errors</span>
+=======
+              {/* Prediction */}
+              <div
+                className="rounded-xl border p-4"
+                style={{
+                  borderColor: `${CLASS_COLORS[prediction]}50`,
+                  backgroundColor: `${CLASS_COLORS[prediction]}10`,
+                }}
+              >
+                <p className="text-[10px] uppercase tracking-wider text-white/40">
+                  Tree Prediction
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  {prediction === 0 ? (
+                    <XCircle className="h-5 w-5 text-rose-400" />
+                  ) : (
+                    <CheckCircle2 className="h-5 w-5 text-teal-400" />
+                  )}
+                  <span
+                    className="text-lg font-bold capitalize"
+                    style={{ color: CLASS_COLORS[prediction] }}
+                  >
+                    {TARGET_NAMES[prediction]}
+                  </span>
+                </div>
+>>>>>>> dcf5a6c (Update project files)
               </div>
+
+              {/* Result */}
+              <div
+                className="rounded-xl border p-4"
+                style={{
+                  borderColor: isCorrect
+                    ? 'rgba(34, 197, 94, 0.5)'
+                    : 'rgba(239, 68, 68, 0.5)',
+                  backgroundColor: isCorrect
+                    ? 'rgba(34, 197, 94, 0.1)'
+                    : 'rgba(239, 68, 68, 0.1)',
+                }}
+              >
+                <p className="text-[10px] uppercase tracking-wider text-white/40">
+                  Result
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  {isCorrect ? (
+                    <>
+                      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                      <span className="text-lg font-bold text-emerald-300">
+                        Correct ✓
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-5 w-5 text-rose-400" />
+                      <span className="text-lg font-bold text-rose-300">
+                        Incorrect ✗
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Decision Path */}
+            {decisionPath.length > 0 && (
+              <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/60">
+                  Decision Path ({decisionPath.length} splits)
+                </p>
+                <div className="space-y-2">
+                  {decisionPath.map((step, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 rounded-lg border border-white/5 bg-black/40 p-2 text-xs"
+                    >
+                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-purple-500/20 font-mono text-[10px] font-bold text-purple-300">
+                        {i + 1}
+                      </span>
+                      <span className="font-mono text-white/70">
+                        {step.feature}
+                      </span>
+                      <span className="text-white/40">=</span>
+                      <span className="font-mono text-white/90">
+                        {step.value.toFixed(3)}
+                      </span>
+                      <span className="text-white/40">→</span>
+                      <span
+                        className={`font-semibold ${
+                          step.direction === 'left'
+                            ? 'text-emerald-400'
+                            : 'text-orange-400'
+                        }`}
+                      >
+                        {step.direction === 'left' ? 'Yes' : 'No'}
+                      </span>
+                      <span className="text-white/40">(≤ {step.threshold.toFixed(2)})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="range"
+                min={0}
+                max={allData.length - 1}
+                value={selectedSampleIdx}
+                onChange={(e) => setSelectedSampleIdx(parseInt(e.target.value))}
+                className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-purple-500"
+              />
             </div>
           </div>
 
@@ -768,13 +1633,22 @@ export default function App() {
           {showCode && (
             <div className="mt-6 rounded-2xl border border-white/10 bg-black/60">
               <div className="flex items-center gap-3 border-b border-white/5 px-6 py-4">
+<<<<<<< HEAD
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 ring-1 ring-amber-400/30">
                   <Code2 className="h-4 w-4 text-amber-300" />
+=======
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500/20 to-teal-500/20 ring-1 ring-rose-400/30">
+                  <Code2 className="h-4 w-4 text-rose-300" />
+>>>>>>> dcf5a6c (Update project files)
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold">Python Source</h3>
                   <p className="text-xs text-white/50">
+<<<<<<< HEAD
                     sklearn GaussianNB on Olivetti faces
+=======
+                    sklearn DecisionTreeClassifier
+>>>>>>> dcf5a6c (Update project files)
                   </p>
                 </div>
               </div>
@@ -797,31 +1671,46 @@ export default function App() {
 
           {/* Bottom info cards */}
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+<<<<<<< HEAD
             <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-amber-500/30">
               <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-amber-500/10 transition group-hover:bg-amber-500/20" />
               <div className="relative">
                 <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 ring-1 ring-amber-400/30">
                   <Sparkles className="h-4 w-4 text-amber-300" />
+=======
+            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-rose-500/30">
+              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-rose-500/10 transition group-hover:bg-rose-500/20" />
+              <div className="relative">
+                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/20 ring-1 ring-rose-400/30">
+                  <GitBranch className="h-4 w-4 text-rose-300" />
+>>>>>>> dcf5a6c (Update project files)
                 </div>
                 <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
                   Algorithm
                 </h4>
+<<<<<<< HEAD
                 <p className="mt-1 font-semibold text-white">
                   Gaussian Naive Bayes
                 </p>
                 <p className="mt-1 text-xs text-white/50">
                   Generative probabilistic model
+=======
+                <p className="mt-1 font-semibold text-white">CART</p>
+                <p className="mt-1 text-xs text-white/50">
+                  Classification And Regression Tree
+>>>>>>> dcf5a6c (Update project files)
                 </p>
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-orange-500/30">
-              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-orange-500/10 transition group-hover:bg-orange-500/20" />
+            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-pink-500/30">
+              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-pink-500/10 transition group-hover:bg-pink-500/20" />
               <div className="relative">
-                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/20 ring-1 ring-orange-400/30">
-                  <Activity className="h-4 w-4 text-orange-300" />
+                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-pink-500/20 ring-1 ring-pink-400/30">
+                  <Target className="h-4 w-4 text-pink-300" />
                 </div>
                 <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+<<<<<<< HEAD
                   Assumption
                 </h4>
                 <p className="mt-1 font-semibold text-white">
@@ -829,10 +1718,18 @@ export default function App() {
                 </p>
                 <p className="mt-1 text-xs text-white/50">
                   Pixels are conditionally independent
+=======
+                  Split Criterion
+                </h4>
+                <p className="mt-1 font-semibold text-white">Gini Impurity</p>
+                <p className="mt-1 text-xs text-white/50">
+                  Minimizes class impurity
+>>>>>>> dcf5a6c (Update project files)
                 </p>
               </div>
             </div>
 
+<<<<<<< HEAD
             <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-rose-500/30">
               <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-rose-500/10 transition group-hover:bg-rose-500/20" />
               <div className="relative">
@@ -863,6 +1760,38 @@ export default function App() {
                 </p>
                 <p className="mt-1 text-xs text-white/50">
                   Pixel intensities
+=======
+            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-teal-500/30">
+              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-teal-500/10 transition group-hover:bg-teal-500/20" />
+              <div className="relative">
+                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/20 ring-1 ring-teal-400/30">
+                  <Activity className="h-4 w-4 text-teal-300" />
+                </div>
+                <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                  Complexity
+                </h4>
+                <p className="mt-1 font-mono font-semibold text-white">
+                  O(n · m · log n)
+                </p>
+                <p className="mt-1 text-xs text-white/50">
+                  n samples, m features
+                </p>
+              </div>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-purple-500/30">
+              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-purple-500/10 transition group-hover:bg-purple-500/20" />
+              <div className="relative">
+                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/20 ring-1 ring-purple-400/30">
+                  <Info className="h-4 w-4 text-purple-300" />
+                </div>
+                <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                  Interpretability
+                </h4>
+                <p className="mt-1 font-semibold text-white">Very High</p>
+                <p className="mt-1 text-xs text-white/50">
+                  White-box model
+>>>>>>> dcf5a6c (Update project files)
                 </p>
               </div>
             </div>
