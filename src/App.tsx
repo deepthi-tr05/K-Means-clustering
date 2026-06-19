@@ -1,712 +1,148 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-<<<<<<< HEAD
-=======
-  GitBranch,
->>>>>>> dcf5a6c (Update project files)
   Code2,
+  Sparkles,
   Target,
   Activity,
-  Layers,
   Info,
-<<<<<<< HEAD
-  User,
-  Camera,
-  CheckCircle2,
-  XCircle,
-  Fingerprint,
-} from 'lucide-react';
-import {
-  generateOlivettiFaces,
-  GaussianNB,
-  accuracy,
-  confusionMatrix,
-} from './data/olivettiFaces';
-
-const CODE_SNIPPET = `import matplotlib.pyplot as plt
-from sklearn.datasets import fetch_olivetti_faces
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import accuracy_score
-
-d = fetch_olivetti_faces()
-X1, X2, y1, y2 = train_test_split(
-    d.data, d.target, test_size=0.2, random_state=42
-)
-
-m = GaussianNB().fit(X1, y1)
-p = m.predict(X2)
-print("Accuracy:", accuracy_score(y2, p))
-
-fig, ax = plt.subplots(2, 5, figsize=(10, 5))
-for i, a in enumerate(ax.flat[:10]):
-    a.imshow(X2[i].reshape(64, 64), cmap='gray')
-    a.set_title(p[i])
-    a.axis('off')
-plt.show()`;
-
-// Face Image Component using Canvas
-function FaceImage({
-  pixels,
-  size = 128,
-  label,
-  predicted,
-  isCorrect,
-  showLabel = true,
-  onClick,
-}: {
-  pixels: number[];
-  size?: number;
-  label?: number;
-  predicted?: number;
-  isCorrect?: boolean;
-  showLabel?: boolean;
-  onClick?: () => void;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const gridSize = 64;
-    const imageData = ctx.createImageData(gridSize, gridSize);
-
-    for (let i = 0; i < pixels.length; i++) {
-      const val = Math.floor(pixels[i] * 255);
-      imageData.data[i * 4] = val;
-      imageData.data[i * 4 + 1] = val;
-      imageData.data[i * 4 + 2] = val;
-      imageData.data[i * 4 + 3] = 255;
-    }
-
-    // Draw to offscreen canvas then scale
-    const offscreen = document.createElement('canvas');
-    offscreen.width = gridSize;
-    offscreen.height = gridSize;
-    const offCtx = offscreen.getContext('2d');
-    if (offCtx) {
-      offCtx.putImageData(imageData, 0, 0);
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(offscreen, 0, 0, size, size);
-    }
-  }, [pixels, size]);
-=======
-  TreePine,
-  Shield,
-  CheckCircle2,
-  XCircle,
+  Hexagon,
+  Aperture,
 } from 'lucide-react';
 import {
   generateBreastCancerData,
-  buildDecisionTree,
-  predict,
-  computeFeatureImportance,
-  computeConfusionMatrix,
-  computeAccuracy,
-  FEATURE_NAMES,
-  TARGET_NAMES,
-  CLASS_COLORS,
-  type TreeNode,
-} from './data/breastCancerData';
+  standardScaler,
+  kMeans,
+  silhouetteScore,
+  clusterStats,
+} from './data/kmeansData';
 
+const CODE_SNIPPET = `import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_breast_cancer
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
 
+d = load_breast_cancer()
+X = pd.DataFrame(
+    d.data, columns=d.feature_names
+)[['mean radius', 'mean texture']]
 
-const CODE_SNIPPET = `from sklearn.datasets import load_breast_cancer
-from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+X = StandardScaler().fit_transform(X)
+k = KMeans(n_clusters=4, random_state=0)
+y = k.fit_predict(X)
 
-X, y = load_breast_cancer(return_X_y=True)
-feature_names = load_breast_cancer().feature_names
-target_names = load_breast_cancer().target_names
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.1, random_state=42
-)
-
-clf = DecisionTreeClassifier(random_state=42)
-clf.fit(X_train, y_train)
-
-print("Accuracy:", round(
-    accuracy_score(y_test, clf.predict(X_test)), 2
-))
-
-plt.figure(figsize=(20, 10))
-plot_tree(
-    clf,
-    feature_names=feature_names,
-    class_names=target_names,
-    filled=True,
-    rounded=True
-)
+for i in range(4):
+    plt.scatter(
+        X[y == i, 0], X[y == i, 1],
+        label=f'C{i}'
+    )
+plt.legend()
 plt.show()`;
 
-// Render tree node as SVG group
-function TreeNodeCard({
-  node,
-  x,
-  y,
-  level,
-  expanded,
-  toggleNode,
-}: {
-  node: TreeNode;
-  x: number;
-  y: number;
-  level: number;
-  expanded: Set<string>;
-  toggleNode: (id: string) => void;
-}) {
-  const nodeId = `${level}-${x}-${y}`;
-  const isExpanded = expanded.has(nodeId);
-  const predColor = node.prediction === 0 ? CLASS_COLORS[0] : CLASS_COLORS[1];
-  const predName = TARGET_NAMES[node.prediction!];
-
-  // Node dimensions
-  const nodeWidth = 150;
-  const nodeHeight = 70;
-
-  if (node.isLeaf) {
-    return (
-      <g transform={`translate(${x}, ${y})`}>
-        <rect
-          x={-nodeWidth / 2}
-          y={-nodeHeight / 2}
-          width={nodeWidth}
-          height={nodeHeight}
-          rx={8}
-          fill={predColor}
-          opacity={0.15}
-          stroke={predColor}
-          strokeWidth={1.5}
-        />
-        <text
-          x={0}
-          y={-12}
-          textAnchor="middle"
-          fill="white"
-          fontSize="11"
-          fontWeight="600"
-        >
-          {predName}
-        </text>
-        <text
-          x={0}
-          y={4}
-          textAnchor="middle"
-          fill="rgba(255,255,255,0.6)"
-          fontSize="9"
-          fontFamily="monospace"
-        >
-          samples: {node.samples}
-        </text>
-        <text
-          x={0}
-          y={18}
-          textAnchor="middle"
-          fill="rgba(255,255,255,0.5)"
-          fontSize="9"
-          fontFamily="monospace"
-        >
-          [{node.value![0]}, {node.value![1]}]
-        </text>
-      </g>
-    );
-  }
->>>>>>> dcf5a6c (Update project files)
-
-  // Internal node
-  return (
-<<<<<<< HEAD
-    <div
-      className={`group relative overflow-hidden rounded-lg border transition ${
-        isCorrect === undefined
-          ? 'border-white/10'
-          : isCorrect
-          ? 'border-emerald-500/40'
-          : 'border-rose-500/40'
-      } ${onClick ? 'cursor-pointer hover:scale-105' : ''}`}
-      onClick={onClick}
-      style={{ width: size, height: size }}
-    >
-      <canvas
-        ref={canvasRef}
-        width={size}
-        height={size}
-        className="block"
-      />
-      {showLabel && (label !== undefined || predicted !== undefined) && (
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-1.5">
-          <div className="flex items-center justify-between text-[10px] font-mono">
-            {label !== undefined && (
-              <span className="rounded bg-amber-500/20 px-1 text-amber-300">
-                {label}
-              </span>
-            )}
-            {predicted !== undefined && (
-              <span
-                className={`rounded px-1 ${
-                  isCorrect
-                    ? 'bg-emerald-500/20 text-emerald-300'
-                    : 'bg-rose-500/20 text-rose-300'
-                }`}
-              >
-                →{predicted}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Probability bar component
-function ProbabilityBar({
-  proba,
-  actualClass,
-}: {
-  proba: number[];
-  actualClass: number;
-}) {
-  const topK = proba
-    .map((p, i) => ({ class: i, prob: p }))
-    .sort((a, b) => b.prob - a.prob)
-    .slice(0, 5);
-  const maxProb = Math.max(...proba);
-
-  return (
-    <div className="space-y-1.5">
-      {topK.map((item) => (
-        <div key={item.class} className="flex items-center gap-2 text-xs">
-          <span
-            className={`w-8 text-right font-mono ${
-              item.class === actualClass ? 'text-emerald-400' : 'text-white/60'
-            }`}
-          >
-            {item.class}
-          </span>
-          <div className="flex-1">
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  item.class === actualClass
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                    : item.prob === maxProb
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-400'
-                    : 'bg-white/30'
-                }`}
-                style={{ width: `${item.prob * 100}%` }}
-              />
-            </div>
-          </div>
-          <span className="w-12 text-right font-mono text-white/50">
-            {(item.prob * 100).toFixed(1)}%
-          </span>
-        </div>
-      ))}
-    </div>
-=======
-    <g
-      transform={`translate(${x}, ${y})`}
-      style={{ cursor: 'pointer' }}
-      onClick={() => toggleNode(nodeId)}
-    >
-      <rect
-        x={-nodeWidth / 2}
-        y={-nodeHeight / 2}
-        width={nodeWidth}
-        height={nodeHeight}
-        rx={8}
-        fill={predColor}
-        opacity={0.1}
-        stroke={predColor}
-        strokeWidth={1.5}
-      />
-      <text
-        x={0}
-        y={-18}
-        textAnchor="middle"
-        fill="white"
-        fontSize="10"
-        fontWeight="600"
-      >
-        {node.featureName!.length > 18
-          ? node.featureName!.slice(0, 16) + '…'
-          : node.featureName}
-      </text>
-      <text
-        x={0}
-        y={-3}
-        textAnchor="middle"
-        fill={predColor}
-        fontSize="10"
-        fontFamily="monospace"
-        fontWeight="600"
-      >
-        ≤ {node.threshold!.toFixed(2)}
-      </text>
-      <text
-        x={0}
-        y={12}
-        textAnchor="middle"
-        fill="rgba(255,255,255,0.6)"
-        fontSize="9"
-        fontFamily="monospace"
-      >
-        gini: {node.gini!.toFixed(3)}
-      </text>
-      <text
-        x={0}
-        y={26}
-        textAnchor="middle"
-        fill="rgba(255,255,255,0.5)"
-        fontSize="9"
-        fontFamily="monospace"
-      >
-        samples: {node.samples}
-      </text>
-      {/* Expand/collapse indicator */}
-      <circle
-        cx={nodeWidth / 2 - 12}
-        cy={0}
-        r={7}
-        fill={predColor}
-        opacity={0.3}
-      />
-      <text
-        x={nodeWidth / 2 - 12}
-        y={3}
-        textAnchor="middle"
-        fill="white"
-        fontSize="9"
-        fontWeight="bold"
-      >
-        {isExpanded ? '−' : '+'}
-      </text>
-    </g>
-  );
-}
-
-// Compute layout positions for tree nodes
-function computeTreeLayout(tree: TreeNode): {
-  positions: Map<string, { x: number; y: number; node: TreeNode; level: number }>;
-  width: number;
-  height: number;
-} {
-  const positions = new Map<
-    string,
-    { x: number; y: number; node: TreeNode; level: number }
-  >();
-  let maxLevel = 0;
-  let leafCounter = 0;
-
-  // First pass: count leaves for width
-  function countLeaves(node: TreeNode): number {
-    if (node.isLeaf) return 1;
-    return countLeaves(node.left!) + countLeaves(node.right!);
-  }
-
-  const totalLeaves = countLeaves(tree);
-  const horizontalSpacing = 180;
-  const verticalSpacing = 130;
-
-  // Assign positions
-  function assignPositions(
-    node: TreeNode,
-    level: number,
-    leftLeaf: number,
-    rightLeaf: number
-  ) {
-    if (node.isLeaf) {
-      const nodeId = `${level}-${leafCounter}`;
-      const x = (leftLeaf + 0.5) * horizontalSpacing;
-      const y = level * verticalSpacing + 50;
-      positions.set(nodeId, { x, y, node, level });
-      leafCounter++;
-      maxLevel = Math.max(maxLevel, level);
-      return;
-    }
-
-    const leftLeaves = countLeaves(node.left!);
-    const rightLeaves = countLeaves(node.right!);
-
-    // Position this node between its children's range
-    const nodeId = `${level}-${leftLeaf}`;
-    const y = level * verticalSpacing + 50;
-
-    // Recalculate x based on children's positions
-    const myX = (leftLeaf + (leftLeaves + rightLeaves) / 2) * horizontalSpacing;
-    positions.set(nodeId, { x: myX, y, node, level });
-
-    assignPositions(node.left!, level + 1, leftLeaf, leftLeaf + leftLeaves);
-    assignPositions(node.right!, level + 1, leftLeaf + leftLeaves, rightLeaf);
-    maxLevel = Math.max(maxLevel, level);
-  }
-
-  assignPositions(tree, 0, 0, totalLeaves);
-
-  // Compute width and height
-  let maxX = 0;
-  let maxY = 0;
-  positions.forEach((p) => {
-    maxX = Math.max(maxX, p.x);
-    maxY = Math.max(maxY, p.y);
-  });
-
-  return {
-    positions,
-    width: maxX + 200,
-    height: maxY + 100,
-  };
-}
-
-// Tree edge component
-function TreeEdge({
-  fromX,
-  fromY,
-  toX,
-  toY,
-  label,
-  color,
-}: {
-  fromX: number;
-  fromY: number;
-  toX: number;
-  toY: number;
-  label?: string;
-  color: string;
-}) {
-  const fromYOffset = fromY + 35;
-  const toYOffset = toY - 35;
-  return (
-    <g>
-      <path
-        d={`M ${fromX} ${fromYOffset} C ${fromX} ${(fromYOffset + toYOffset) / 2}, ${toX} ${(fromYOffset + toYOffset) / 2}, ${toX} ${toYOffset}`}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        opacity={0.5}
-      />
-      {label && (
-        <text
-          x={(fromX + toX) / 2}
-          y={(fromYOffset + toYOffset) / 2 - 5}
-          textAnchor="middle"
-          fill={color}
-          fontSize="10"
-          fontWeight="600"
-        >
-          {label}
-        </text>
-      )}
-    </g>
->>>>>>> dcf5a6c (Update project files)
-  );
-}
+// Cluster colors
+const CLUSTER_COLORS = [
+  '#a855f7', // violet
+  '#ec4899', // pink
+  '#06b6d4', // cyan
+  '#f59e0b', // amber
+  '#10b981', // emerald
+  '#f43f5e', // rose
+  '#3b82f6', // blue
+  '#f97316', // orange
+  '#14b8a6', // teal
+  '#84cc16', // lime
+];
 
 export default function App() {
+  const [k, setK] = useState(4);
   const [showCode, setShowCode] = useState(false);
-<<<<<<< HEAD
-  const [selectedIdx, setSelectedIdx] = useState(0);
-  const numSubjects = 10;
 
-  // Generate faces
-  const allFaces = useMemo(() => generateOlivettiFaces(numSubjects, 10), [numSubjects]);
-
-  // Train/test split (80/20)
-  const { train, test } = useMemo(() => {
-    const split = Math.floor(allFaces.length * 0.8);
-    return {
-      train: allFaces.slice(0, split),
-      test: allFaces.slice(split),
-    };
-  }, [allFaces]);
-
-  // Train model
-  const model = useMemo(() => {
-    const m = new GaussianNB();
-    m.fit(
-      train.map((f) => f.pixels),
-      train.map((f) => f.label)
-    );
-    return m;
-  }, [train]);
-
-  // Predict
-  const predictions = useMemo(
-    () => model.predict(test.map((f) => f.pixels)),
-    [model, test]
+  // Generate and scale data
+  const data = useMemo(() => generateBreastCancerData(), []);
+  const { scaled } = useMemo(
+    () => standardScaler(data),
+    [data]
   );
 
-  const probabilities = useMemo(
-    () => model.predictProba(test.map((f) => f.pixels)),
-    [model, test]
-  );
+  // Run K-Means for current k
+  const result = useMemo(() => kMeans(scaled, k, 100, 0), [scaled, k]);
 
-  // Stats
-  const acc = useMemo(
-    () => accuracy(test.map((f) => f.label), predictions),
-    [test, predictions]
-  );
-
-  const confMatrix = useMemo(
-    () => confusionMatrix(test.map((f) => f.label), predictions, numSubjects),
-    [test, predictions, numSubjects]
-  );
-
-  // Compute per-class accuracy
-  const classAccuracies = useMemo(() => {
-    return Array.from({ length: numSubjects }, (_, c) => {
-      const classIndices = test
-        .map((f, i) => ({ label: f.label, idx: i }))
-        .filter((item) => item.label === c);
-      if (classIndices.length === 0) return 0;
-      const correct = classIndices.filter(
-        (item) => predictions[item.idx] === c
-      ).length;
-      return correct / classIndices.length;
+  // Elbow method: compute inertia for k=1 to 10
+  const elbowData = useMemo(() => {
+    return Array.from({ length: 10 }, (_, i) => {
+      const currentK = i + 1;
+      const res = kMeans(scaled, currentK, 100, 0);
+      return { k: currentK, inertia: res.inertia };
     });
-  }, [test, predictions, numSubjects]);
+  }, [scaled]);
 
-  // First 10 test samples (like the matplotlib plot)
-  const first10Test = test.slice(0, 10);
-  const first10Predictions = predictions.slice(0, 10);
-
-  // Current selected sample
-  const currentTest = test[selectedIdx];
-  const currentPrediction = predictions[selectedIdx];
-  const currentProba = probabilities[selectedIdx];
-  const isCorrect = currentTest.label === currentPrediction;
-
-  // Mean faces per class (averaged pixel values)
-  const meanFaces = useMemo(() => {
-    const means: number[][] = [];
-    const size = 64 * 64;
-    for (let c = 0; c < numSubjects; c++) {
-      const classFaces = train.filter((f) => f.label === c);
-      const meanPixels = Array(size).fill(0);
-      classFaces.forEach((f) => {
-        for (let i = 0; i < size; i++) meanPixels[i] += f.pixels[i];
-      });
-      for (let i = 0; i < size; i++) meanPixels[i] /= classFaces.length;
-      means.push(meanPixels);
-    }
-    return means;
-  }, [train, numSubjects]);
-=======
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-  const [selectedSampleIdx, setSelectedSampleIdx] = useState(0);
-
-  // Generate data
-  const allData = useMemo(() => generateBreastCancerData(), []);
-  
-  // Split data
-  const { train, test } = useMemo(() => {
-    const testSize = Math.floor(allData.length * 0.1);
-    return {
-      train: allData.slice(testSize),
-      test: allData.slice(0, testSize),
-    };
-  }, [allData]);
-
-  // Build tree
-  const tree = useMemo(() => buildDecisionTree(train, 4, 5), [train]);
-
-  // Stats
-  const accuracy = useMemo(() => computeAccuracy(tree, test), [tree, test]);
-  const confusionMatrix = useMemo(
-    () => computeConfusionMatrix(tree, test),
-    [tree, test]
-  );
-  const featureImportance = useMemo(
-    () => computeFeatureImportance(tree),
-    [tree]
-  );
-
-  // Top features
-  const topFeatures = useMemo(() => {
-    const arr = Array.from(featureImportance.entries())
-      .map(([idx, imp]) => ({ idx, imp, name: FEATURE_NAMES[idx] }))
-      .sort((a, b) => b.imp - a.imp)
-      .slice(0, 8);
-    const maxImp = Math.max(...arr.map((f) => f.imp), 1);
-    return arr.map((f) => ({ ...f, normalized: f.imp / maxImp }));
-  }, [featureImportance]);
-
-  // Tree layout
-  const layout = useMemo(() => computeTreeLayout(tree), [tree]);
-
-  // Count nodes
-  const countNodes = (node: TreeNode): number => {
-    if (node.isLeaf) return 1;
-    return 1 + countNodes(node.left!) + countNodes(node.right!);
-  };
-  const countLeaves = (node: TreeNode): number => {
-    if (node.isLeaf) return 1;
-    return countLeaves(node.left!) + countLeaves(node.right!);
-  };
-
-  const totalNodes = countNodes(tree);
-  const totalLeaves = countLeaves(tree);
-
-  const toggleNode = (id: string) => {
-    setExpandedNodes((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+  // Silhouette scores for k=2 to 10
+  const silhouetteData = useMemo(() => {
+    return Array.from({ length: 9 }, (_, i) => {
+      const currentK = i + 2;
+      const res = kMeans(scaled, currentK, 100, 0);
+      const score = silhouetteScore(scaled, res.labels, currentK);
+      return { k: currentK, score };
     });
-  };
+  }, [scaled]);
 
-  // Auto-expand root's children
-  const currentSample = allData[selectedSampleIdx];
-  const prediction = predict(tree, currentSample.features);
-  const isCorrect = prediction === currentSample.label;
+  // Cluster stats
+  const stats = useMemo(
+    () => clusterStats(scaled, result.labels, k),
+    [scaled, result.labels, k]
+  );
 
-  // Find decision path
-  const decisionPath = useMemo(() => {
-    const path: { feature: string; threshold: number; direction: 'left' | 'right'; value: number }[] = [];
-    let node: TreeNode | undefined = tree;
-    while (node && !node.isLeaf) {
-      const val: number = currentSample.features[node.featureIndex!];
-      const dir: 'left' | 'right' = val <= node.threshold! ? 'left' : 'right';
-      path.push({
-        feature: node.featureName!,
-        threshold: node.threshold!,
-        direction: dir,
-        value: val,
-      });
-      node = dir === 'left' ? node.left : node.right;
-    }
-    return path;
-  }, [tree, currentSample]);
->>>>>>> dcf5a6c (Update project files)
+  // Current silhouette score
+  const currentSilhouette = useMemo(
+    () => silhouetteScore(scaled, result.labels, k),
+    [scaled, result.labels, k]
+  );
+
+  // Plot dimensions
+  const plotWidth = 700;
+  const plotHeight = 400;
+  const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+  const innerWidth = plotWidth - padding.left - padding.right;
+  const innerHeight = plotHeight - padding.top - padding.bottom;
+
+  // Compute scales based on data range
+  const xMin = Math.min(...scaled.map((d) => d.x)) - 0.5;
+  const xMax = Math.max(...scaled.map((d) => d.x)) + 0.5;
+  const yMin = Math.min(...scaled.map((d) => d.y)) - 0.5;
+  const yMax = Math.max(...scaled.map((d) => d.y)) + 0.5;
+
+  const xScale = (x: number) =>
+    padding.left + ((x - xMin) / (xMax - xMin)) * innerWidth;
+  const yScale = (y: number) =>
+    padding.top + innerHeight - ((y - yMin) / (yMax - yMin)) * innerHeight;
+
+  // Elbow plot dimensions
+  const elbowWidth = 280;
+  const elbowHeight = 120;
+  const elbowPadding = { top: 10, right: 10, bottom: 25, left: 40 };
+  const elbowInnerWidth = elbowWidth - elbowPadding.left - elbowPadding.right;
+  const elbowInnerHeight =
+    elbowHeight - elbowPadding.top - elbowPadding.bottom;
+
+  const elbowXScale = (k: number) =>
+    elbowPadding.left + ((k - 1) / 9) * elbowInnerWidth;
+  const maxInertia = Math.max(...elbowData.map((d) => d.inertia));
+  const elbowYScale = (inertia: number) =>
+    elbowPadding.top +
+    elbowInnerHeight -
+    (inertia / maxInertia) * elbowInnerHeight;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#1a0f08] text-white">
+    <div className="relative min-h-screen overflow-hidden bg-[#0f051a] text-white">
       {/* Animated gradient background orbs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-<<<<<<< HEAD
-        <div className="absolute -top-40 -left-40 h-96 w-96 animate-pulse rounded-full bg-amber-600/15 blur-3xl" />
+        <div className="absolute -top-40 -left-40 h-96 w-96 animate-pulse rounded-full bg-violet-600/15 blur-3xl" />
         <div
-          className="absolute top-1/3 -right-40 h-96 w-96 animate-pulse rounded-full bg-orange-600/15 blur-3xl"
+          className="absolute top-1/3 -right-40 h-96 w-96 animate-pulse rounded-full bg-pink-600/15 blur-3xl"
           style={{ animationDelay: '1s' }}
         />
         <div
-          className="absolute -bottom-40 left-1/3 h-96 w-96 animate-pulse rounded-full bg-rose-600/15 blur-3xl"
-=======
-        <div className="absolute -top-40 -left-40 h-96 w-96 animate-pulse rounded-full bg-rose-600/15 blur-3xl" />
-        <div
-          className="absolute top-1/3 -right-40 h-96 w-96 animate-pulse rounded-full bg-teal-600/15 blur-3xl"
-          style={{ animationDelay: '1s' }}
-        />
-        <div
-          className="absolute -bottom-40 left-1/3 h-96 w-96 animate-pulse rounded-full bg-purple-600/15 blur-3xl"
->>>>>>> dcf5a6c (Update project files)
+          className="absolute -bottom-40 left-1/3 h-96 w-96 animate-pulse rounded-full bg-cyan-600/15 blur-3xl"
           style={{ animationDelay: '2s' }}
         />
       </div>
@@ -725,35 +161,20 @@ export default function App() {
         {/* Header */}
         <header className="border-b border-white/5 bg-black/40">
           <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
-<<<<<<< HEAD
-            <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500">
-              <Fingerprint
-                className="h-5 w-5 text-white"
-                strokeWidth={2.5}
-              />
+            <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 via-pink-500 to-cyan-500">
+              <Aperture className="h-5 w-5 text-white" strokeWidth={2.5} />
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight">
-                Face Recognition
+                K-Means Clustering
               </h1>
               <p className="text-xs text-white/50">
-                Gaussian Naive Bayes · Olivetti Faces
-=======
-            <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 via-pink-500 to-teal-500">
-              <TreePine className="h-5 w-5 text-white" strokeWidth={2.5} />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight">
-                Decision Tree Classifier
-              </h1>
-              <p className="text-xs text-white/50">
-                Breast Cancer Dataset · Interactive Tree Visualization
->>>>>>> dcf5a6c (Update project files)
+                Unsupervised Learning · Breast Cancer Dataset
               </p>
             </div>
             <button
               onClick={() => setShowCode((s) => !s)}
-              className="ml-auto flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 transition hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-white"
+              className="ml-auto flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 transition hover:border-violet-500/50 hover:bg-violet-500/10 hover:text-white"
             >
               <Code2 className="h-3.5 w-3.5" />
               {showCode ? 'Hide Code' : 'View Code'}
@@ -763,892 +184,561 @@ export default function App() {
 
         <main className="mx-auto max-w-7xl px-6 py-8">
           {/* Hero */}
-<<<<<<< HEAD
-          <div className="group relative mb-8 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-rose-900/30 p-8">
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-rose-400 to-transparent" />
+          <div className="group relative mb-8 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-violet-900/30 via-pink-900/20 to-cyan-900/30 p-8">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
 
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-2xl">
-                <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-[11px] font-medium text-amber-300">
-                  <Camera className="h-3 w-3" /> Image Classification
+                <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-[11px] font-medium text-violet-300">
+                  <Sparkles className="h-3 w-3" /> Unsupervised
                 </div>
                 <h2 className="text-3xl font-bold leading-tight md:text-4xl">
-                  Recognizing faces with{' '}
-                  <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 bg-clip-text text-transparent">
-                    Gaussian Naive Bayes
+                  Discovering structure with{' '}
+                  <span className="bg-gradient-to-r from-violet-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+                    K-Means
                   </span>
                 </h2>
                 <p className="mt-3 text-sm leading-relaxed text-white/70">
-                  Each face is represented as a{' '}
-                  <span className="font-mono text-amber-300">64×64</span>{' '}
-                  grayscale image. The model assumes pixel values follow a
-                  Gaussian distribution per class and uses Bayes' theorem to
-                  classify.
-=======
-          <div className="group relative mb-8 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-rose-900/30 via-pink-900/20 to-teal-900/30 p-8">
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-400 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-teal-400 to-transparent" />
-
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-2xl">
-                <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-rose-400/30 bg-rose-500/10 px-3 py-1 text-[11px] font-medium text-rose-300">
-                  <Shield className="h-3 w-3" /> Classification
-                </div>
-                <h2 className="text-3xl font-bold leading-tight md:text-4xl">
-                  Classifying tumors with{' '}
-                  <span className="bg-gradient-to-r from-rose-400 via-pink-400 to-teal-400 bg-clip-text text-transparent">
-                    decision trees
-                  </span>
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-white/70">
-                  A decision tree recursively splits the data by choosing the
-                  feature and threshold that best separate the classes using{' '}
-                  <span className="font-semibold text-rose-300">Gini impurity</span>.
-                  Explore the tree structure and see how predictions are made.
->>>>>>> dcf5a6c (Update project files)
+                  K-Means partitions the data into{' '}
+                  <span className="font-semibold text-violet-300">k</span>{' '}
+                  clusters by iteratively assigning points to the nearest
+                  centroid and updating centroids to cluster means.
                 </p>
               </div>
               <div className="flex gap-3 lg:flex-col">
                 <div className="flex-1 rounded-xl border border-white/10 bg-black/40 px-5 py-4 lg:min-w-[140px]">
-<<<<<<< HEAD
-                  <p className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-3xl font-bold text-transparent">
-                    {allFaces.length}
-                  </p>
-                  <p className="text-xs text-white/50">Faces</p>
-                </div>
-                <div className="flex-1 rounded-xl border border-white/10 bg-black/40 px-5 py-4 lg:min-w-[140px]">
-                  <p className="bg-gradient-to-r from-orange-400 to-rose-400 bg-clip-text text-3xl font-bold text-transparent">
-                    {numSubjects}
-                  </p>
-                  <p className="text-xs text-white/50">Subjects</p>
-                </div>
-                <div className="flex-1 rounded-xl border border-white/10 bg-black/40 px-5 py-4 lg:min-w-[140px]">
-                  <p className="bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-3xl font-bold text-transparent">
-                    {(acc * 100).toFixed(0)}%
-=======
-                  <p className="bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-3xl font-bold text-transparent">
+                  <p className="bg-gradient-to-r from-violet-400 to-pink-400 bg-clip-text text-3xl font-bold text-transparent">
                     569
                   </p>
                   <p className="text-xs text-white/50">Samples</p>
                 </div>
                 <div className="flex-1 rounded-xl border border-white/10 bg-black/40 px-5 py-4 lg:min-w-[140px]">
-                  <p className="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-3xl font-bold text-transparent">
-                    30
+                  <p className="bg-gradient-to-r from-pink-400 to-cyan-400 bg-clip-text text-3xl font-bold text-transparent">
+                    2
                   </p>
                   <p className="text-xs text-white/50">Features</p>
                 </div>
                 <div className="flex-1 rounded-xl border border-white/10 bg-black/40 px-5 py-4 lg:min-w-[140px]">
-                  <p className="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-3xl font-bold text-transparent">
-                    {(accuracy * 100).toFixed(0)}%
->>>>>>> dcf5a6c (Update project files)
+                  <p className="bg-gradient-to-r from-cyan-400 to-amber-400 bg-clip-text text-3xl font-bold text-transparent">
+                    {k}
                   </p>
-                  <p className="text-xs text-white/50">Accuracy</p>
+                  <p className="text-xs text-white/50">Clusters</p>
                 </div>
               </div>
             </div>
           </div>
 
-<<<<<<< HEAD
-          {/* Sample Gallery (2×5 grid like matplotlib) */}
-          <div className="rounded-2xl border border-white/10 bg-black/40 p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500/20 to-rose-500/20 ring-1 ring-amber-400/30">
-                  <User className="h-4 w-4 text-amber-300" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold">Test Sample Gallery</h3>
-                  <p className="text-xs text-white/50">
-                    First 10 test images with predictions (click to inspect)
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="text-white/70">Correct</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-rose-500" />
-                  <span className="text-white/70">Wrong</span>
-=======
-          {/* Main tree visualization */}
-          <div className="rounded-2xl border border-white/10 bg-black/40 p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500/20 to-teal-500/20 ring-1 ring-rose-400/30">
-                  <GitBranch className="h-4 w-4 text-rose-300" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold">Decision Tree</h3>
-                  <p className="text-xs text-white/50">
-                    {totalNodes} nodes · {totalLeaves} leaves · max depth 4
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-rose-500" />
-                  <span className="text-white/70">Malignant</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-teal-500" />
-                  <span className="text-white/70">Benign</span>
->>>>>>> dcf5a6c (Update project files)
-                </div>
-              </div>
-            </div>
-
-<<<<<<< HEAD
-            <div className="grid grid-cols-5 gap-2 sm:grid-cols-5 md:gap-3">
-              {first10Test.map((face, i) => (
-                <FaceImage
-                  key={i}
-                  pixels={face.pixels}
-                  size={128}
-                  label={face.label}
-                  predicted={first10Predictions[i]}
-                  isCorrect={face.label === first10Predictions[i]}
-                />
-              ))}
-            </div>
-
-            <div className="mt-4 grid grid-cols-10 gap-1 text-center text-[9px] font-mono">
-              {first10Predictions.map((p, i) => (
-                <div
-                  key={i}
-                  className={`rounded px-1 py-0.5 ${
-                    first10Test[i].label === p
-                      ? 'bg-emerald-500/10 text-emerald-300'
-                      : 'bg-rose-500/10 text-rose-300'
-                  }`}
-                >
-                  {p}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Main Grid: Explorer + Stats */}
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Sample Explorer */}
-            <div className="lg:col-span-2">
+          {/* Main Visualization */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            {/* Scatter Plot */}
+            <div className="lg:col-span-3">
               <div className="rounded-2xl border border-white/10 bg-black/40 p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500/20 to-pink-500/20 ring-1 ring-orange-400/30">
-                      <Target className="h-4 w-4 text-orange-300" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500/20 to-pink-500/20 ring-1 ring-violet-400/30">
+                      <Hexagon className="h-4 w-4 text-violet-300" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold">Sample Explorer</h3>
+                      <h3 className="text-sm font-semibold">
+                        Cluster Visualization
+                      </h3>
                       <p className="text-xs text-white/50">
-                        Inspect predictions with probabilities
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setSelectedIdx((s) => Math.max(0, s - 1))}
-                      disabled={selectedIdx === 0}
-                      className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10 disabled:opacity-30"
-                    >
-                      ← Prev
-                    </button>
-                    <span className="font-mono text-xs text-white/50">
-                      {selectedIdx + 1} / {test.length}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setSelectedIdx((s) => Math.min(test.length - 1, s + 1))
-                      }
-                      disabled={selectedIdx === test.length - 1}
-                      className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10 disabled:opacity-30"
-                    >
-                      Next →
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  {/* Face Image */}
-                  <div className="flex flex-col items-center gap-2">
-                    <FaceImage
-                      pixels={currentTest.pixels}
-                      size={192}
-                      showLabel={false}
-                    />
-                    <div className="text-center text-xs">
-                      <p className="text-white/40">Test Sample #{selectedIdx}</p>
-                    </div>
-                  </div>
-
-                  {/* Prediction Card */}
-                  <div className="space-y-3">
-                    <div
-                      className="rounded-xl border p-4"
-                      style={{
-                        borderColor: isCorrect
-                          ? 'rgba(16, 185, 129, 0.5)'
-                          : 'rgba(244, 63, 94, 0.5)',
-                        backgroundColor: isCorrect
-                          ? 'rgba(16, 185, 129, 0.1)'
-                          : 'rgba(244, 63, 94, 0.1)',
-                      }}
-                    >
-                      <p className="text-[10px] uppercase tracking-wider text-white/40">
-                        Result
-                      </p>
-                      <div className="mt-2 flex items-center gap-2">
-                        {isCorrect ? (
-                          <>
-                            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                            <span className="text-lg font-bold text-emerald-300">
-                              Correct ✓
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="h-5 w-5 text-rose-400" />
-                            <span className="text-lg font-bold text-rose-300">
-                              Incorrect ✗
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-                      <p className="text-[10px] uppercase tracking-wider text-amber-400/70">
-                        Actual Subject
-                      </p>
-                      <p className="mt-1 font-mono text-2xl font-bold text-amber-300">
-                        {currentTest.label}
-                      </p>
-                    </div>
-
-                    <div
-                      className="rounded-xl border p-4"
-                      style={{
-                        borderColor: `${
-                          isCorrect ? '#10b981' : '#f43f5e'
-                        }50`,
-                        backgroundColor: `${
-                          isCorrect ? '#10b981' : '#f43f5e'
-                        }10`,
-                      }}
-                    >
-                      <p className="text-[10px] uppercase tracking-wider text-white/40">
-                        Predicted Subject
-                      </p>
-                      <p
-                        className="mt-1 font-mono text-2xl font-bold"
-                        style={{
-                          color: isCorrect ? '#10b981' : '#f43f5e',
-                        }}
-                      >
-                        {currentPrediction}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Probabilities */}
-                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/60">
-                      Class Probabilities (Top 5)
-                    </p>
-                    <ProbabilityBar
-                      proba={currentProba}
-                      actualClass={currentTest.label}
-                    />
-                    <div className="mt-3 border-t border-white/5 pt-3">
-                      <p className="text-[10px] uppercase tracking-wider text-white/40">
-                        Confidence
-                      </p>
-                      <p className="mt-1 font-mono text-lg font-bold text-amber-300">
-                        {(Math.max(...currentProba) * 100).toFixed(1)}%
+                        Mean Radius × Mean Texture (standardized)
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4">
+                <div className="overflow-hidden rounded-xl border border-white/5 bg-black/40">
+                  <svg
+                    width={plotWidth}
+                    height={plotHeight}
+                    className="w-full h-auto"
+                  >
+                    {/* Background */}
+                    <rect
+                      x={padding.left}
+                      y={padding.top}
+                      width={innerWidth}
+                      height={innerHeight}
+                      fill="rgba(255,255,255,0.02)"
+                      stroke="rgba(255,255,255,0.05)"
+                    />
+
+                    {/* Grid lines */}
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const xVal = xMin + (i / 4) * (xMax - xMin);
+                      return (
+                        <line
+                          key={`xgrid-${i}`}
+                          x1={xScale(xVal)}
+                          y1={padding.top}
+                          x2={xScale(xVal)}
+                          y2={padding.top + innerHeight}
+                          stroke="rgba(255,255,255,0.03)"
+                        />
+                      );
+                    })}
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const yVal = yMin + (i / 4) * (yMax - yMin);
+                      return (
+                        <line
+                          key={`ygrid-${i}`}
+                          x1={padding.left}
+                          y1={yScale(yVal)}
+                          x2={padding.left + innerWidth}
+                          y2={yScale(yVal)}
+                          stroke="rgba(255,255,255,0.03)"
+                        />
+                      );
+                    })}
+
+                    {/* Data points */}
+                    {scaled.map((p, i) => (
+                      <circle
+                        key={i}
+                        cx={xScale(p.x)}
+                        cy={yScale(p.y)}
+                        r={3.5}
+                        fill={CLUSTER_COLORS[result.labels[i]]}
+                        opacity={0.75}
+                        stroke="rgba(255,255,255,0.2)"
+                        strokeWidth={0.5}
+                      />
+                    ))}
+
+                    {/* Centroids */}
+                    {result.centroids.map((c, i) => (
+                      <g key={`cent-${i}`}>
+                        {/* Glow */}
+                        <circle
+                          cx={xScale(c[0])}
+                          cy={yScale(c[1])}
+                          r={16}
+                          fill={CLUSTER_COLORS[i]}
+                          opacity={0.2}
+                        />
+                        {/* Outer ring */}
+                        <circle
+                          cx={xScale(c[0])}
+                          cy={yScale(c[1])}
+                          r={10}
+                          fill="none"
+                          stroke="white"
+                          strokeWidth={2}
+                        />
+                        {/* Inner dot */}
+                        <circle
+                          cx={xScale(c[0])}
+                          cy={yScale(c[1])}
+                          r={6}
+                          fill={CLUSTER_COLORS[i]}
+                        />
+                        {/* X marker */}
+                        <line
+                          x1={xScale(c[0]) - 4}
+                          y1={yScale(c[1]) - 4}
+                          x2={xScale(c[0]) + 4}
+                          y2={yScale(c[1]) + 4}
+                          stroke="white"
+                          strokeWidth={1.5}
+                        />
+                        <line
+                          x1={xScale(c[0]) - 4}
+                          y1={yScale(c[1]) + 4}
+                          x2={xScale(c[0]) + 4}
+                          y2={yScale(c[1]) - 4}
+                          stroke="white"
+                          strokeWidth={1.5}
+                        />
+                        {/* Label */}
+                        <text
+                          x={xScale(c[0]) + 14}
+                          y={yScale(c[1]) + 4}
+                          fill="white"
+                          fontSize="11"
+                          fontWeight="600"
+                        >
+                          C{i}
+                        </text>
+                      </g>
+                    ))}
+
+                    {/* Axes */}
+                    <line
+                      x1={padding.left}
+                      y1={padding.top + innerHeight}
+                      x2={padding.left + innerWidth}
+                      y2={padding.top + innerHeight}
+                      stroke="rgba(255,255,255,0.2)"
+                    />
+                    <line
+                      x1={padding.left}
+                      y1={padding.top}
+                      x2={padding.left}
+                      y2={padding.top + innerHeight}
+                      stroke="rgba(255,255,255,0.2)"
+                    />
+
+                    {/* X ticks */}
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const v = xMin + (i / 4) * (xMax - xMin);
+                      return (
+                        <g key={`xtick-${i}`}>
+                          <line
+                            x1={xScale(v)}
+                            y1={padding.top + innerHeight}
+                            x2={xScale(v)}
+                            y2={padding.top + innerHeight + 4}
+                            stroke="rgba(255,255,255,0.2)"
+                          />
+                          <text
+                            x={xScale(v)}
+                            y={padding.top + innerHeight + 18}
+                            textAnchor="middle"
+                            fill="rgba(255,255,255,0.5)"
+                            fontSize="10"
+                            fontFamily="monospace"
+                          >
+                            {v.toFixed(1)}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {/* Y ticks */}
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const v = yMin + (i / 4) * (yMax - yMin);
+                      return (
+                        <g key={`ytick-${i}`}>
+                          <text
+                            x={padding.left - 8}
+                            y={yScale(v) + 3}
+                            textAnchor="end"
+                            fill="rgba(255,255,255,0.5)"
+                            fontSize="10"
+                            fontFamily="monospace"
+                          >
+                            {v.toFixed(1)}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {/* Labels */}
+                    <text
+                      x={padding.left + innerWidth / 2}
+                      y={padding.top + innerHeight + 34}
+                      textAnchor="middle"
+                      fill="rgba(255,255,255,0.7)"
+                      fontSize="11"
+                      fontWeight="600"
+                    >
+                      Mean Radius (standardized)
+                    </text>
+                    <text
+                      x={padding.left - 35}
+                      y={padding.top + innerHeight / 2}
+                      textAnchor="middle"
+                      fill="rgba(255,255,255,0.7)"
+                      fontSize="11"
+                      fontWeight="600"
+                      transform={`rotate(-90, ${padding.left - 35}, ${
+                        padding.top + innerHeight / 2
+                      })`}
+                    >
+                      Mean Texture (standardized)
+                    </text>
+                  </svg>
+                </div>
+
+                {/* K Selector */}
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-white/60">
+                      Number of Clusters (k)
+                    </label>
+                    <div className="rounded-md border border-violet-500/30 bg-violet-500/10 px-2.5 py-1 font-mono text-sm font-bold text-violet-300">
+                      k = {k}
+                    </div>
+                  </div>
+
                   <input
                     type="range"
-                    min={0}
-                    max={test.length - 1}
-                    value={selectedIdx}
-                    onChange={(e) =>
-                      setSelectedIdx(parseInt(e.target.value))
-                    }
-                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-amber-500"
-=======
-            <div className="overflow-auto rounded-xl border border-white/5 bg-black/40 p-4">
-              <svg
-                width={layout.width}
-                height={layout.height}
-                className="min-w-full"
-              >
-                {/* Draw edges first */}
-                {Array.from(layout.positions.entries()).map(([id, pos]) => {
-                  if (pos.node.isLeaf) return null;
-                  const children: [TreeNode, string][] = [];
-                  if (pos.node.left)
-                    children.push([pos.node.left, `${pos.level + 1}-L`]);
-                  if (pos.node.right)
-                    children.push([pos.node.right, `${pos.level + 1}-R`]);
-
-                  // Find left and right child positions
-                  const leftChildId = Array.from(layout.positions.keys()).find(
-                    (k) => {
-                      const p = layout.positions.get(k)!;
-                      return (
-                        p.level === pos.level + 1 &&
-                        p.x < pos.x + 10 &&
-                        p.node === pos.node.left
-                      );
-                    }
-                  );
-                  const rightChildId = Array.from(layout.positions.keys()).find(
-                    (k) => {
-                      const p = layout.positions.get(k)!;
-                      return (
-                        p.level === pos.level + 1 &&
-                        p.x > pos.x - 10 &&
-                        p.node === pos.node.right
-                      );
-                    }
-                  );
-
-                  return (
-                    <g key={`edges-${id}`}>
-                      {leftChildId && (
-                        <TreeEdge
-                          fromX={pos.x}
-                          fromY={pos.y}
-                          toX={layout.positions.get(leftChildId)!.x}
-                          toY={layout.positions.get(leftChildId)!.y}
-                          label="Yes"
-                          color={CLASS_COLORS[pos.node.prediction!]}
-                        />
-                      )}
-                      {rightChildId && (
-                        <TreeEdge
-                          fromX={pos.x}
-                          fromY={pos.y}
-                          toX={layout.positions.get(rightChildId)!.x}
-                          toY={layout.positions.get(rightChildId)!.y}
-                          label="No"
-                          color={CLASS_COLORS[pos.node.prediction!]}
-                        />
-                      )}
-                    </g>
-                  );
-                })}
-
-                {/* Draw nodes */}
-                {Array.from(layout.positions.entries()).map(([id, pos]) => (
-                  <TreeNodeCard
-                    key={id}
-                    node={pos.node}
-                    x={pos.x}
-                    y={pos.y}
-                    level={pos.level}
-                    expanded={expandedNodes}
-                    toggleNode={toggleNode}
+                    min={1}
+                    max={10}
+                    value={k}
+                    onChange={(e) => setK(parseInt(e.target.value))}
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-violet-500"
                   />
-                ))}
-              </svg>
-            </div>
-          </div>
 
-          {/* Stats Grid */}
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Confusion Matrix */}
-            <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="mb-3 flex items-center gap-2">
-                <Target className="h-4 w-4 text-rose-400" />
-                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
-                  Confusion Matrix
-                </h3>
-              </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                <div />
-                <div className="text-center text-[10px] text-rose-400">
-                  Pred: M
-                </div>
-                <div className="text-center text-[10px] text-teal-400">
-                  Pred: B
-                </div>
-                <div className="flex items-center text-[10px] text-rose-400">
-                  Actual: M
-                </div>
-                <div
-                  className="rounded-lg border border-rose-500/30 bg-rose-500/15 p-3 text-center"
-                  title="True Positives"
-                >
-                  <p className="font-mono text-xl font-bold text-rose-300">
-                    {confusionMatrix[0][0]}
-                  </p>
-                  <p className="text-[9px] text-rose-400/70">TP</p>
-                </div>
-                <div
-                  className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-center"
-                  title="False Negatives"
-                >
-                  <p className="font-mono text-xl font-bold text-white/60">
-                    {confusionMatrix[0][1]}
-                  </p>
-                  <p className="text-[9px] text-white/40">FN</p>
-                </div>
-                <div className="flex items-center text-[10px] text-teal-400">
-                  Actual: B
-                </div>
-                <div
-                  className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-center"
-                  title="False Positives"
-                >
-                  <p className="font-mono text-xl font-bold text-white/60">
-                    {confusionMatrix[1][0]}
-                  </p>
-                  <p className="text-[9px] text-white/40">FP</p>
-                </div>
-                <div
-                  className="rounded-lg border border-teal-500/30 bg-teal-500/15 p-3 text-center"
-                  title="True Negatives"
-                >
-                  <p className="font-mono text-xl font-bold text-teal-300">
-                    {confusionMatrix[1][1]}
-                  </p>
-                  <p className="text-[9px] text-teal-400/70">TN</p>
-                </div>
-              </div>
-              <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.02] p-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-white/60">Overall Accuracy</span>
-                  <span className="bg-gradient-to-r from-rose-400 to-teal-400 bg-clip-text font-mono font-bold text-transparent">
-                    {(accuracy * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-rose-500 to-teal-500"
-                    style={{ width: `${accuracy * 100}%` }}
->>>>>>> dcf5a6c (Update project files)
-                  />
+                  <div className="mt-2 flex justify-between text-[10px] text-white/40">
+                    <span>Underfit (k=1)</span>
+                    <span>Overfit (k=10)</span>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {[1, 2, 3, 4, 5, 6, 8, 10].map((kVal) => (
+                      <button
+                        key={kVal}
+                        onClick={() => setK(kVal)}
+                        className={`rounded-md border px-3 py-1 text-xs font-mono font-semibold transition ${
+                          kVal === k
+                            ? 'border-violet-500 bg-violet-500/20 text-violet-300'
+                            : 'border-white/10 bg-white/[0.02] text-white/60 hover:border-white/20 hover:text-white'
+                        }`}
+                      >
+                        k={kVal}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
-<<<<<<< HEAD
-            {/* Stats */}
-            <div className="space-y-6">
-              {/* Accuracy */}
+            {/* Right Panel */}
+            <div className="space-y-6 lg:col-span-2">
+              {/* Cluster Legend */}
               <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
                 <div className="mb-3 flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-amber-400" />
+                  <Target className="h-4 w-4 text-violet-400" />
                   <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
-                    Model Performance
-                  </h3>
-                </div>
-                <div className="text-center">
-                  <p className="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 bg-clip-text font-mono text-5xl font-bold text-transparent">
-                    {(acc * 100).toFixed(1)}%
-                  </p>
-                  <p className="mt-1 text-xs text-white/50">Overall Accuracy</p>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2 text-center">
-                    <p className="font-mono font-bold text-emerald-300">
-                      {predictions.filter(
-                        (p, i) => p === test[i].label
-                      ).length}
-                    </p>
-                    <p className="text-[10px] text-white/50">Correct</p>
-                  </div>
-                  <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-2 text-center">
-                    <p className="font-mono font-bold text-rose-300">
-                      {predictions.filter(
-                        (p, i) => p !== test[i].label
-                      ).length}
-                    </p>
-                    <p className="text-[10px] text-white/50">Wrong</p>
-                  </div>
-                </div>
-=======
-            {/* Feature Importance */}
-            <div className="rounded-2xl border border-white/10 bg-black/40 p-5 lg:col-span-2">
-              <div className="mb-3 flex items-center gap-2">
-                <Activity className="h-4 w-4 text-purple-400" />
-                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
-                  Top Feature Importance
-                </h3>
->>>>>>> dcf5a6c (Update project files)
-              </div>
-              <div className="space-y-2">
-                {topFeatures.map((f) => (
-                  <div key={f.idx}>
-                    <div className="mb-1 flex items-center justify-between text-xs">
-                      <span className="truncate text-white/80">{f.name}</span>
-                      <span className="ml-2 font-mono text-white/50">
-                        {f.imp.toFixed(3)}
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-rose-500 via-purple-500 to-teal-500"
-                        style={{ width: `${f.normalized * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-<<<<<<< HEAD
-              {/* Per-class accuracy */}
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
-                <div className="mb-3 flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-orange-400" />
-                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
-                    Per-Class Accuracy
+                    Clusters
                   </h3>
                 </div>
                 <div className="space-y-1.5">
-                  {classAccuracies.map((acc, c) => (
-                    <div key={c} className="flex items-center gap-2 text-xs">
-                      <span className="w-5 font-mono text-white/60">{c}</span>
-                      <div className="flex-1">
-                        <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500"
-                            style={{ width: `${acc * 100}%` }}
-                          />
-                        </div>
+                  {stats.map((s, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-3 w-3 rounded-full"
+                          style={{ backgroundColor: CLUSTER_COLORS[i] }}
+                        />
+                        <span className="text-xs font-semibold">C{i}</span>
                       </div>
-                      <span className="w-10 text-right font-mono text-white/50">
-                        {(acc * 100).toFixed(0)}%
-                      </span>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="font-mono text-white/60">
+                          n={s.size}
+                        </span>
+                        <span className="font-mono text-white/40">
+                          ({((s.size / scaled.length) * 100).toFixed(0)}%)
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* Metrics */}
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
+                <div className="mb-3 flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-pink-400" />
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
+                    Model Metrics
+                  </h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-violet-400/70">
+                      Inertia
+                    </p>
+                    <p className="mt-1 font-mono text-xl font-bold text-violet-300">
+                      {result.inertia.toFixed(0)}
+                    </p>
+                    <p className="text-[10px] text-white/50">
+                      Within-cluster variance
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-pink-500/20 bg-pink-500/5 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-pink-400/70">
+                      Silhouette
+                    </p>
+                    <p className="mt-1 font-mono text-xl font-bold text-pink-300">
+                      {currentSilhouette.toFixed(3)}
+                    </p>
+                    <p className="text-[10px] text-white/50">
+                      Separation quality
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.02] p-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/60">Iterations</span>
+                    <span className="font-mono text-cyan-300">
+                      {result.iterations}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Elbow Plot */}
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-5">
+                <div className="mb-3 flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-cyan-400" />
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/60">
+                    Elbow Method
+                  </h3>
+                </div>
+                <svg
+                  width={elbowWidth}
+                  height={elbowHeight}
+                  className="w-full h-auto"
+                >
+                  <rect
+                    x={elbowPadding.left}
+                    y={elbowPadding.top}
+                    width={elbowInnerWidth}
+                    height={elbowInnerHeight}
+                    fill="rgba(255,255,255,0.02)"
+                  />
+                  {/* Line */}
+                  <polyline
+                    points={elbowData
+                      .map((d) => `${elbowXScale(d.k)},${elbowYScale(d.inertia)}`)
+                      .join(' ')}
+                    fill="none"
+                    stroke="url(#elbowGradient)"
+                    strokeWidth={2}
+                  />
+                  {/* Points */}
+                  {elbowData.map((d) => (
+                    <g key={d.k}>
+                      <circle
+                        cx={elbowXScale(d.k)}
+                        cy={elbowYScale(d.inertia)}
+                        r={d.k === k ? 5 : 3}
+                        fill={d.k === k ? '#06b6d4' : 'rgba(255,255,255,0.4)'}
+                        stroke="white"
+                        strokeWidth={d.k === k ? 2 : 0.5}
+                      />
+                    </g>
+                  ))}
+                  {/* X labels */}
+                  {elbowData
+                    .filter((_, i) => i % 2 === 0 || i === 9)
+                    .map((d) => (
+                      <text
+                        key={d.k}
+                        x={elbowXScale(d.k)}
+                        y={elbowHeight - 5}
+                        textAnchor="middle"
+                        fill="rgba(255,255,255,0.5)"
+                        fontSize="9"
+                        fontFamily="monospace"
+                      >
+                        {d.k}
+                      </text>
+                    ))}
+                  <defs>
+                    <linearGradient
+                      id="elbowGradient"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="0%"
+                    >
+                      <stop offset="0%" stopColor="#a855f7" />
+                      <stop offset="50%" stopColor="#ec4899" />
+                      <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <p className="mt-2 text-[10px] text-center text-white/40">
+                  k → Inertia curve (look for elbow)
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Mean Faces */}
+          {/* Silhouette Analysis */}
           <div className="mt-6 rounded-2xl border border-white/10 bg-black/40 p-6">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500/20 to-pink-500/20 ring-1 ring-rose-400/30">
-                <Sparkles className="h-4 w-4 text-rose-300" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 ring-1 ring-emerald-400/30">
+                <Activity className="h-4 w-4 text-emerald-300" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">
-                  Mean Faces per Subject
+                  Silhouette Analysis
                 </h3>
                 <p className="text-xs text-white/50">
-                  Average appearance learned by the model
-=======
-          {/* Sample Explorer */}
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/40 p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 ring-1 ring-purple-400/30">
-                  <Layers className="h-4 w-4 text-purple-300" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold">Sample Explorer</h3>
-                  <p className="text-xs text-white/50">
-                    Trace a prediction through the tree
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() =>
-                    setSelectedSampleIdx((s) => Math.max(0, s - 1))
-                  }
-                  disabled={selectedSampleIdx === 0}
-                  className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10 disabled:opacity-30"
-                >
-                  ← Prev
-                </button>
-                <span className="font-mono text-xs text-white/50">
-                  {selectedSampleIdx + 1} / {allData.length}
-                </span>
-                <button
-                  onClick={() =>
-                    setSelectedSampleIdx((s) =>
-                      Math.min(allData.length - 1, s + 1)
-                    )
-                  }
-                  disabled={selectedSampleIdx === allData.length - 1}
-                  className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 transition hover:bg-white/10 disabled:opacity-30"
-                >
-                  Next →
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {/* Actual Label */}
-              <div
-                className="rounded-xl border p-4"
-                style={{
-                  borderColor: `${CLASS_COLORS[currentSample.label]}50`,
-                  backgroundColor: `${CLASS_COLORS[currentSample.label]}10`,
-                }}
-              >
-                <p className="text-[10px] uppercase tracking-wider text-white/40">
-                  Actual Diagnosis
->>>>>>> dcf5a6c (Update project files)
-                </p>
-                <div className="mt-2 flex items-center gap-2">
-                  {currentSample.label === 0 ? (
-                    <XCircle className="h-5 w-5 text-rose-400" />
-                  ) : (
-                    <CheckCircle2 className="h-5 w-5 text-teal-400" />
-                  )}
-                  <span
-                    className="text-lg font-bold capitalize"
-                    style={{ color: CLASS_COLORS[currentSample.label] }}
-                  >
-                    {TARGET_NAMES[currentSample.label]}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-<<<<<<< HEAD
-            <div
-              className="grid gap-2"
-              style={{ gridTemplateColumns: `repeat(${numSubjects}, 1fr)` }}
-            >
-              {meanFaces.map((pixels, c) => (
-                <div key={c} className="flex flex-col items-center gap-1">
-                  <FaceImage pixels={pixels} size={80} showLabel={false} />
-                  <span className="font-mono text-[10px] text-amber-300">
-                    {c}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Confusion Matrix */}
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/40 p-6">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 ring-1 ring-purple-400/30">
-                <Target className="h-4 w-4 text-purple-300" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold">Confusion Matrix</h3>
-                <p className="text-xs text-white/50">
-                  Actual vs Predicted ({numSubjects}×{numSubjects})
+                  Optimal k by silhouette coefficient
                 </p>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <div
-                className="inline-grid gap-0.5"
-                style={{
-                  gridTemplateColumns: `auto repeat(${numSubjects}, 1fr)`,
-                }}
-              >
-                {/* Header */}
-                <div />
-                {Array.from({ length: numSubjects }, (_, i) => (
+            <div className="grid grid-cols-9 gap-2">
+              {silhouetteData.map((d) => {
+                const bestK = silhouetteData.reduce((a, b) =>
+                  a.score > b.score ? a : b
+                ).k;
+                const isBest = d.k === bestK;
+                const isCurrent = d.k === k;
+                const maxScore = Math.max(...silhouetteData.map((s) => s.score));
+                const height = (d.score / maxScore) * 100;
+                return (
                   <div
-                    key={`h-${i}`}
-                    className="flex h-8 items-center justify-center text-[10px] font-mono text-white/50"
+                    key={d.k}
+                    className="flex flex-col items-center gap-1"
                   >
-                    {i}
-                  </div>
-                ))}
-
-                {/* Rows */}
-                {confMatrix.map((row, r) => (
-                  <>
-                    <div
-                      key={`r-${r}`}
-                      className="flex h-8 items-center pr-2 text-[10px] font-mono text-white/50"
-                    >
-                      {r}
-                    </div>
-                    {row.map((val, c) => {
-                      const max = Math.max(...row, 1);
-                      const isDiag = r === c;
-                      const intensity = val / max;
-                      return (
-                        <div
-                          key={`${r}-${c}`}
-                          className={`flex h-8 w-8 items-center justify-center text-[10px] font-mono ${
-                            val === 0
-                              ? 'text-white/10'
-                              : isDiag
-                              ? 'text-emerald-300'
-                              : 'text-rose-300'
-                          }`}
-                          style={{
-                            backgroundColor: isDiag
-                              ? `rgba(16, 185, 129, ${intensity * 0.4})`
-                              : `rgba(244, 63, 94, ${intensity * 0.4})`,
-                          }}
-                          title={`Actual ${r} → Predicted ${c}: ${val}`}
-                        >
-                          {val > 0 ? val : ''}
-                        </div>
-                      );
-                    })}
-                  </>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded bg-emerald-500/40" />
-                <span className="text-white/60">Diagonal = Correct</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded bg-rose-500/40" />
-                <span className="text-white/60">Off-diagonal = Errors</span>
-=======
-              {/* Prediction */}
-              <div
-                className="rounded-xl border p-4"
-                style={{
-                  borderColor: `${CLASS_COLORS[prediction]}50`,
-                  backgroundColor: `${CLASS_COLORS[prediction]}10`,
-                }}
-              >
-                <p className="text-[10px] uppercase tracking-wider text-white/40">
-                  Tree Prediction
-                </p>
-                <div className="mt-2 flex items-center gap-2">
-                  {prediction === 0 ? (
-                    <XCircle className="h-5 w-5 text-rose-400" />
-                  ) : (
-                    <CheckCircle2 className="h-5 w-5 text-teal-400" />
-                  )}
-                  <span
-                    className="text-lg font-bold capitalize"
-                    style={{ color: CLASS_COLORS[prediction] }}
-                  >
-                    {TARGET_NAMES[prediction]}
-                  </span>
-                </div>
->>>>>>> dcf5a6c (Update project files)
-              </div>
-
-              {/* Result */}
-              <div
-                className="rounded-xl border p-4"
-                style={{
-                  borderColor: isCorrect
-                    ? 'rgba(34, 197, 94, 0.5)'
-                    : 'rgba(239, 68, 68, 0.5)',
-                  backgroundColor: isCorrect
-                    ? 'rgba(34, 197, 94, 0.1)'
-                    : 'rgba(239, 68, 68, 0.1)',
-                }}
-              >
-                <p className="text-[10px] uppercase tracking-wider text-white/40">
-                  Result
-                </p>
-                <div className="mt-2 flex items-center gap-2">
-                  {isCorrect ? (
-                    <>
-                      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                      <span className="text-lg font-bold text-emerald-300">
-                        Correct ✓
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-5 w-5 text-rose-400" />
-                      <span className="text-lg font-bold text-rose-300">
-                        Incorrect ✗
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Decision Path */}
-            {decisionPath.length > 0 && (
-              <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/60">
-                  Decision Path ({decisionPath.length} splits)
-                </p>
-                <div className="space-y-2">
-                  {decisionPath.map((step, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-3 rounded-lg border border-white/5 bg-black/40 p-2 text-xs"
-                    >
-                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-purple-500/20 font-mono text-[10px] font-bold text-purple-300">
-                        {i + 1}
-                      </span>
-                      <span className="font-mono text-white/70">
-                        {step.feature}
-                      </span>
-                      <span className="text-white/40">=</span>
-                      <span className="font-mono text-white/90">
-                        {step.value.toFixed(3)}
-                      </span>
-                      <span className="text-white/40">→</span>
-                      <span
-                        className={`font-semibold ${
-                          step.direction === 'left'
-                            ? 'text-emerald-400'
-                            : 'text-orange-400'
+                    <div className="flex h-24 w-full items-end">
+                      <div
+                        className={`w-full rounded-t transition-all ${
+                          isBest
+                            ? 'bg-gradient-to-t from-emerald-600 to-emerald-400'
+                            : isCurrent
+                            ? 'bg-gradient-to-t from-violet-600 to-pink-500'
+                            : 'bg-white/10'
                         }`}
-                      >
-                        {step.direction === 'left' ? 'Yes' : 'No'}
-                      </span>
-                      <span className="text-white/40">(≤ {step.threshold.toFixed(2)})</span>
+                        style={{ height: `${height}%` }}
+                      />
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-3 flex items-center gap-2">
-              <input
-                type="range"
-                min={0}
-                max={allData.length - 1}
-                value={selectedSampleIdx}
-                onChange={(e) => setSelectedSampleIdx(parseInt(e.target.value))}
-                className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-purple-500"
-              />
+                    <span
+                      className={`font-mono text-[10px] ${
+                        isBest
+                          ? 'font-bold text-emerald-300'
+                          : isCurrent
+                          ? 'text-violet-300'
+                          : 'text-white/50'
+                      }`}
+                    >
+                      {d.k}
+                    </span>
+                    <span
+                      className={`font-mono text-[9px] ${
+                        isBest ? 'text-emerald-400' : 'text-white/40'
+                      }`}
+                    >
+                      {d.score.toFixed(2)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
+            <p className="mt-3 text-center text-xs text-white/50">
+              Best k:{' '}
+              <span className="font-mono font-bold text-emerald-300">
+                {silhouetteData.reduce((a, b) => (a.score > b.score ? a : b)).k}
+              </span>{' '}
+              · Current k:{' '}
+              <span className="font-mono font-bold text-violet-300">{k}</span>
+            </p>
           </div>
 
           {/* Code Preview */}
           {showCode && (
             <div className="mt-6 rounded-2xl border border-white/10 bg-black/60">
               <div className="flex items-center gap-3 border-b border-white/5 px-6 py-4">
-<<<<<<< HEAD
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 ring-1 ring-amber-400/30">
-                  <Code2 className="h-4 w-4 text-amber-300" />
-=======
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500/20 to-teal-500/20 ring-1 ring-rose-400/30">
-                  <Code2 className="h-4 w-4 text-rose-300" />
->>>>>>> dcf5a6c (Update project files)
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500/20 to-pink-500/20 ring-1 ring-violet-400/30">
+                  <Code2 className="h-4 w-4 text-violet-300" />
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold">Python Source</h3>
                   <p className="text-xs text-white/50">
-<<<<<<< HEAD
-                    sklearn GaussianNB on Olivetti faces
-=======
-                    sklearn DecisionTreeClassifier
->>>>>>> dcf5a6c (Update project files)
+                    sklearn KMeans on breast cancer data
                   </p>
                 </div>
               </div>
@@ -1671,34 +761,18 @@ export default function App() {
 
           {/* Bottom info cards */}
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-<<<<<<< HEAD
-            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-amber-500/30">
-              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-amber-500/10 transition group-hover:bg-amber-500/20" />
+            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-violet-500/30">
+              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-violet-500/10 transition group-hover:bg-violet-500/20" />
               <div className="relative">
-                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 ring-1 ring-amber-400/30">
-                  <Sparkles className="h-4 w-4 text-amber-300" />
-=======
-            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-rose-500/30">
-              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-rose-500/10 transition group-hover:bg-rose-500/20" />
-              <div className="relative">
-                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/20 ring-1 ring-rose-400/30">
-                  <GitBranch className="h-4 w-4 text-rose-300" />
->>>>>>> dcf5a6c (Update project files)
+                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/20 ring-1 ring-violet-400/30">
+                  <Aperture className="h-4 w-4 text-violet-300" />
                 </div>
                 <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
                   Algorithm
                 </h4>
-<<<<<<< HEAD
-                <p className="mt-1 font-semibold text-white">
-                  Gaussian Naive Bayes
-                </p>
+                <p className="mt-1 font-semibold text-white">K-Means++</p>
                 <p className="mt-1 text-xs text-white/50">
-                  Generative probabilistic model
-=======
-                <p className="mt-1 font-semibold text-white">CART</p>
-                <p className="mt-1 text-xs text-white/50">
-                  Classification And Regression Tree
->>>>>>> dcf5a6c (Update project files)
+                  Smart centroid initialization
                 </p>
               </div>
             </div>
@@ -1710,88 +784,49 @@ export default function App() {
                   <Target className="h-4 w-4 text-pink-300" />
                 </div>
                 <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-<<<<<<< HEAD
-                  Assumption
+                  Objective
                 </h4>
                 <p className="mt-1 font-semibold text-white">
-                  Feature Independence
+                  Minimize Inertia
                 </p>
                 <p className="mt-1 text-xs text-white/50">
-                  Pixels are conditionally independent
-=======
-                  Split Criterion
-                </h4>
-                <p className="mt-1 font-semibold text-white">Gini Impurity</p>
-                <p className="mt-1 text-xs text-white/50">
-                  Minimizes class impurity
->>>>>>> dcf5a6c (Update project files)
+                  Sum of squared distances
                 </p>
               </div>
             </div>
 
-<<<<<<< HEAD
-            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-rose-500/30">
-              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-rose-500/10 transition group-hover:bg-rose-500/20" />
+            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-cyan-500/30">
+              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-cyan-500/10 transition group-hover:bg-cyan-500/20" />
               <div className="relative">
-                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/20 ring-1 ring-rose-400/30">
-                  <Layers className="h-4 w-4 text-rose-300" />
-                </div>
-                <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-                  Data
-                </h4>
-                <p className="mt-1 font-semibold text-white">
-                  Olivetti Faces
-                </p>
-                <p className="mt-1 text-xs text-white/50">64×64 grayscale</p>
-              </div>
-            </div>
-
-            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-purple-500/30">
-              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-purple-500/10 transition group-hover:bg-purple-500/20" />
-              <div className="relative">
-                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/20 ring-1 ring-purple-400/30">
-                  <Info className="h-4 w-4 text-purple-300" />
-                </div>
-                <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-                  Features
-                </h4>
-                <p className="mt-1 font-mono font-semibold text-white">
-                  4096
-                </p>
-                <p className="mt-1 text-xs text-white/50">
-                  Pixel intensities
-=======
-            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-teal-500/30">
-              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-teal-500/10 transition group-hover:bg-teal-500/20" />
-              <div className="relative">
-                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/20 ring-1 ring-teal-400/30">
-                  <Activity className="h-4 w-4 text-teal-300" />
+                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/20 ring-1 ring-cyan-400/30">
+                  <Activity className="h-4 w-4 text-cyan-300" />
                 </div>
                 <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
                   Complexity
                 </h4>
                 <p className="mt-1 font-mono font-semibold text-white">
-                  O(n · m · log n)
+                  O(n · k · i · d)
                 </p>
                 <p className="mt-1 text-xs text-white/50">
-                  n samples, m features
+                  n points, k clusters
                 </p>
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-purple-500/30">
-              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-purple-500/10 transition group-hover:bg-purple-500/20" />
+            <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-5 transition hover:border-amber-500/30">
+              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-amber-500/10 transition group-hover:bg-amber-500/20" />
               <div className="relative">
-                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/20 ring-1 ring-purple-400/30">
-                  <Info className="h-4 w-4 text-purple-300" />
+                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 ring-1 ring-amber-400/30">
+                  <Info className="h-4 w-4 text-amber-300" />
                 </div>
                 <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-                  Interpretability
+                  Preprocessing
                 </h4>
-                <p className="mt-1 font-semibold text-white">Very High</p>
+                <p className="mt-1 font-semibold text-white">
+                  StandardScaler
+                </p>
                 <p className="mt-1 text-xs text-white/50">
-                  White-box model
->>>>>>> dcf5a6c (Update project files)
+                  μ=0, σ=1 per feature
                 </p>
               </div>
             </div>

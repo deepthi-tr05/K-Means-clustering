@@ -1,15 +1,6 @@
-<<<<<<< HEAD
-# Gaussian-Naive-Bayes
-=======
-<<<<<<< HEAD
-# 👤 Face Recognition Visualizer
+# 🎯 K-Means Clustering Visualizer
 
-A **beautiful, interactive visualization** of face recognition using **Gaussian Naive Bayes** on the Olivetti Faces dataset. Watch the model classify 64×64 grayscale face images in real-time!
-=======
-# 🌳 Decision Tree Classifier Visualizer
-
-A **beautiful, interactive visualization** of Decision Tree classification on the Breast Cancer dataset. Watch the tree make predictions step-by-step and explore feature importance, confusion matrices, and decision paths in real-time!
->>>>>>> dcf5a6c (Update project files)
+A **beautiful, interactive visualization** of K-Means clustering on the Breast Cancer dataset. Explore how different values of **k** affect cluster formation with real-time updates, elbow analysis, and silhouette scores!
 
 ![React](https://img.shields.io/badge/React-19-61dafb?style=flat&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat&logo=typescript)
@@ -17,175 +8,96 @@ A **beautiful, interactive visualization** of Decision Tree classification on th
 
 ## 🎯 Overview
 
-<<<<<<< HEAD
-This dashboard demonstrates **Gaussian Naive Bayes** for face classification. Each face is a 64×64 grayscale image (4096 pixel features). The model learns the mean and variance of each pixel per subject and uses Bayes' theorem for classification.
+This dashboard demonstrates **K-Means clustering** on the Breast Cancer Wisconsin dataset using two features: **mean radius** and **mean texture**. The data is standardized and clustered into k groups, with interactive controls to explore different values of k.
 
 ## ✨ Features
 
-### 🖼️ Interactive Face Gallery
-- **2×5 grid** of test samples (like the matplotlib output)
-- **Canvas-rendered** grayscale face images
-- **Color-coded borders**: Green for correct, red for wrong
-- **Label overlays** showing actual → predicted
-- **Click-to-inspect** functionality
+### 🎨 Interactive Scatter Plot
+- **569 data points** plotted in 2D
+- **Color-coded clusters** with 10 distinct colors
+- **Animated centroids** with glow effects and X markers
+- **Cluster labels** (C0, C1, C2, ...)
+- **Grid lines** and proper axis labels
+- **Standardized coordinates** (mean=0, std=1)
 
-### 🔍 Sample Explorer
-- **Navigate** through all test samples
-- **Large face preview** (192×192)
-- **Three-panel display**:
-  - Result (Correct/Incorrect)
-  - Actual Subject ID
-  - Predicted Subject ID
-- **Probability distribution** (Top 5 classes)
-- **Confidence score**
+### 🎛️ Interactive K Selector
+- **Range slider** (k=1 to k=10)
+- **Quick-select buttons** for common values
+- **Real-time updates** as k changes
+- **Visual feedback** on active k value
 
-### 📊 Mean Faces per Subject
-- **Average face** learned for each subject
-- **10 mean images** in a grid
-- Shows what the model "sees" per class
+### 📊 Elbow Method Plot
+- **Inertia vs k** curve
+- **Gradient line** (violet → pink → cyan)
+- **Highlighted current k**
+- Helps identify optimal number of clusters
 
-### 🎯 Confusion Matrix
-- **10×10 heatmap** of predictions
-- **Color-coded**:
-  - Green diagonal = correct
-  - Red off-diagonal = errors
-- **Intensity** shows count magnitude
-- **Tooltips** with exact values
+### 📈 Silhouette Analysis
+- **Bar chart** showing silhouette scores for k=2 to 10
+- **Best k highlighted** in emerald
+- **Current k highlighted** in violet/pink gradient
+- **Numeric scores** displayed
 
-### 📈 Per-Class Accuracy
-- **Bar chart** showing accuracy per subject
-- **Gradient bars** (amber → orange → rose)
-- **Numeric values** in monospace
-
-### 🎨 Beautiful Design
-- **Warm amber/orange/rose** theme (portrait studio aesthetic)
-- **Animated gradient orbs** in background
-- **Gradient text** and accents
-- **Canvas-rendered** faces with anti-aliasing
-- **Smooth transitions** throughout
-=======
-This dashboard visualizes a **Decision Tree Classifier** trained on the Breast Cancer Wisconsin dataset. The tree recursively splits the data using Gini impurity to classify tumors as **malignant** or **benign**.
-
-### Classes
-- 🔴 **Malignant** (red) - Cancerous tumors
-- 🟢 **Benign** (teal) - Non-cancerous tumors
-
-## ✨ Features
-
-### 🌳 Interactive Tree Visualization
-- **Full SVG tree rendering** with proper layout
-- **Color-coded nodes** showing prediction class
-- **Node information**: feature name, threshold, Gini impurity, sample count
-- **Class distribution** shown in each node
-- **Curved edges** with Yes/No labels
-
-### 📊 Confusion Matrix
-- **Visual matrix** showing TP, FP, TN, FN
-- **Color-coded** for easy interpretation
-- **Overall accuracy** with gradient progress bar
-
-### 🎯 Feature Importance
-- **Bar chart** of top 8 most important features
-- **Gradient bars** showing relative importance
-- **Sorted** by importance value
-
-### 🔍 Sample Explorer
-- **Navigate** through all 569 samples
-- **See actual vs predicted** diagnosis
-- **Decision path** visualization showing which splits were made
-- **Color-coded** correct/incorrect predictions
-
-### 📱 Rich Statistics
-- Total samples: 569
-- Features: 30
-- Accuracy percentage
-- Tree depth: 4
-- Node and leaf counts
+### 🎯 Cluster Statistics
+- **Cluster list** with:
+  - Color-coded indicators
+  - Cluster size (n)
+  - Percentage of total
+- **Model metrics**:
+  - Inertia (within-cluster variance)
+  - Silhouette score (separation quality)
+  - Iterations to converge
 
 ### 💻 Code Preview
 - Toggle to view Python source code
-- sklearn's DecisionTreeClassifier implementation
+- Shows sklearn KMeans implementation
+- Syntax highlighted with line numbers
 
 ### 🎨 Beautiful Design
-- **Rose/teal/purple** color scheme (medical theme)
+- **Violet/pink/cyan** color scheme (multi-cluster theme)
 - **Animated gradient orbs** in background
-- **Gradient hero section**
-- **Smooth transitions** throughout
-- **Dark theme** with professional medical aesthetic
->>>>>>> dcf5a6c (Update project files)
+- **Gradient text** for emphasis
+- **Smooth transitions** on k changes
+- **Professional dark theme**
 
 ## 🚀 Getting Started
 
 ```bash
-<<<<<<< HEAD
 # Clone
-git clone https://github.com/yourusername/face-recognition-visualizer.git
-cd face-recognition-visualizer
-=======
-# Clone the repository
-git clone https://github.com/yourusername/decision-tree-visualizer.git
-cd decision-tree-visualizer
->>>>>>> dcf5a6c (Update project files)
+git clone https://github.com/yourusername/kmeans-visualizer.git
+cd kmeans-visualizer
 
-# Install dependencies
+# Install & run
 npm install
-
-# Start development server
 npm run dev
 ```
 
-<<<<<<< HEAD
 ## 📚 The Algorithm
 
-### Gaussian Naive Bayes
+### K-Means (Lloyd's Algorithm)
 
-For each class c and feature j:
+1. **Initialize** k centroids (using K-Means++ in this implementation)
+2. **Assign** each point to nearest centroid
+3. **Update** centroids to cluster means
+4. **Repeat** until convergence
+
+### K-Means++ Initialization
+
+Selects initial centroids to be far apart:
+1. Choose first centroid randomly
+2. For each subsequent centroid:
+   - Compute distance to nearest existing centroid
+   - Choose next centroid with probability proportional to distance²
+
+### Silhouette Coefficient
+
+Measures how similar a point is to its own cluster vs other clusters:
 ```
-μ_cj = mean of feature j in class c
-σ²_cj = variance of feature j in class c
+s = (b - a) / max(a, b)
 ```
-
-Prediction using Bayes' theorem:
-```
-P(class|x) ∝ P(class) × ∏ P(x_j|class)
-```
-
-Where each P(x_j|class) is a Gaussian distribution.
-
-### Why Naive Bayes for Faces?
-- **Fast training** - closed-form solution
-- **Scales well** to high dimensions (4096 features)
-- **Works surprisingly well** despite independence assumption
-- **Probabilistic outputs** (confidence scores)
-=======
-Open [http://localhost:5173](http://localhost:5173)
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-## 📚 The Algorithm
-
-### CART (Classification And Regression Tree)
-
-1. **Start** with all data at the root
-2. **Find the best split**: feature and threshold that minimizes Gini impurity
-3. **Split** data into left (≤ threshold) and right (> threshold)
-4. **Repeat** recursively until:
-   - Max depth reached
-   - Node is pure (all same class)
-   - Too few samples
-
-### Gini Impurity
-
-```
-Gini = 1 - Σ p(i)²
-```
-
-Where p(i) is the proportion of samples belonging to class i.
->>>>>>> dcf5a6c (Update project files)
+Where:
+- **a** = average distance to same cluster
+- **b** = minimum average distance to other clusters
 
 ## 🛠️ Technology Stack
 
@@ -194,34 +106,19 @@ Where p(i) is the proportion of samples belonging to class i.
 - **Vite** - Build tool
 - **Tailwind CSS** - Styling
 - **Lucide React** - Icons
-<<<<<<< HEAD
-- **HTML5 Canvas** - Face image rendering
-- **Custom Gaussian NB** implementation
-=======
-- **Custom SVG** - Tree visualization
-- **Custom CART implementation** in TypeScript
->>>>>>> dcf5a6c (Update project files)
+- **Custom SVG** - Data visualization
+- **Custom K-Means** implementation in TypeScript
 
 ## 📁 Project Structure
 
 ```
-<<<<<<< HEAD
-face-recognition-visualizer/
+kmeans-visualizer/
 ├── src/
 │   ├── data/
-│   │   └── olivettiFaces.ts  # Data & Gaussian NB
-│   ├── App.tsx               # Main dashboard
-│   ├── main.tsx              # Entry point
-│   └── index.css             # Global styles
-=======
-decision-tree-visualizer/
-├── src/
-│   ├── data/
-│   │   └── breastCancerData.ts  # Dataset & tree algorithm
-│   ├── App.tsx                  # Main dashboard
-│   ├── main.tsx                 # Entry point
-│   └── index.css                # Global styles
->>>>>>> dcf5a6c (Update project files)
+│   │   └── kmeansData.ts  # K-Means algorithm & data
+│   ├── App.tsx            # Main dashboard
+│   ├── main.tsx           # Entry point
+│   └── index.css          # Global styles
 ├── index.html
 ├── package.json
 └── README.md
@@ -230,110 +127,63 @@ decision-tree-visualizer/
 ## 🎓 Educational Value
 
 ### Learn About
-<<<<<<< HEAD
-- **Image classification** fundamentals
-- **Gaussian distributions** in ML
-- **Bayes' theorem** in practice
-- **Confusion matrices** interpretation
-- **Feature independence** assumption
-- **Generative vs discriminative** models
+- **Unsupervised learning** concepts
+- **K-Means algorithm** mechanics
+- **K-Means++** initialization benefits
+- **Elbow method** for choosing k
+- **Silhouette analysis** for cluster quality
+- **Standardization** importance
 
 ### Key Insights
-- Naive Bayes works well even for correlated features (pixels)
-- Mean faces reveal what the model learns per class
-- Confidence scores help understand uncertainty
-- Confusion matrix shows systematic errors
-=======
-- **Decision tree construction** from scratch
-- **Gini impurity** as a split criterion
-- **Overfitting** and max depth control
-- **Feature importance** derivation
-- **Confusion matrix** interpretation
-- **Model interpretability** (white-box models)
-
-### Key Concepts
-- **Parametric vs non-parametric**: Trees are non-parametric
-- **White-box models**: Easy to interpret and explain
-- **Greedy algorithm**: Makes locally optimal splits
-- **Pruning**: Prevents overfitting
->>>>>>> dcf5a6c (Update project files)
+- K-Means converges to local optima
+- K-Means++ gives better initial centroids
+- Elbow method helps choose optimal k
+- Silhouette score validates clustering quality
+- Standardization is crucial for distance-based methods
 
 ## 🔬 Algorithm Details
 
 ### Time Complexity
-<<<<<<< HEAD
-- **Training**: O(n · d) where n = samples, d = features
-- **Prediction**: O(c · d) where c = classes
+**O(n · k · i · d)** where:
+- n = number of points
+- k = number of clusters
+- i = iterations
+- d = dimensions
 
 ### Space Complexity
-- O(c · d) to store means and variances
+**O(n · d + k · d)** for data and centroids
 
-### Features
-- **Input**: 64×64 grayscale images
-- **Representation**: 4096 pixel intensity values (0-1)
-- **Classes**: 10 subjects (10 images each)
+### Features Used
+- **Mean Radius**: Size of the cell nucleus
+- **Mean Texture**: Standard deviation of gray-scale values
+
+### Preprocessing
+- **StandardScaler**: Zero mean, unit variance per feature
+- Critical for distance-based algorithms
 
 ## 🌐 Live Demo
 
-[View Live Demo](https://face-recognition-visualizer.vercel.app)
+[View Live Demo](https://kmeans-visualizer.vercel.app)
 
 ## 🤝 Contributing
 
 Contributions welcome!
 
 ### Ideas for Enhancement
-- [ ] Load real Olivetti dataset
-- [ ] Add data augmentation visualization
-- [ ] Compare with other classifiers (SVM, KNN, Neural Nets)
-- [ ] PCA visualization for dimensionality reduction
-- [ ] Interactive feature selection
-- [ ] Eigenfaces implementation
-=======
-- **Training**: O(n · m · log n)
-- **Prediction**: O(log n) for balanced trees
-
-### Space Complexity
-- O(n) to store the tree
-
-### Hyperparameters
-- **Max depth**: Controls tree complexity
-- **Min samples**: Minimum samples per node
-- **Criterion**: Gini or entropy
-
-## 🌐 Live Demo
-
-[View Live Demo](https://decision-tree-visualizer.vercel.app)
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-### Ideas for Enhancement
-- [ ] Interactive max-depth slider
-- [ ] Animation of tree growing
-- [ ] Export tree to DOT format
-- [ ] Compare with Random Forest
-- [ ] Feature selection tool
-- [ ] Custom datasets
->>>>>>> dcf5a6c (Update project files)
+- [ ] Load full 30-feature dataset
+- [ ] PCA for higher dimensions
+- [ ] Compare with hierarchical clustering
+- [ ] DBSCAN implementation
+- [ ] Animated convergence process
+- [ ] Export cluster assignments
+- [ ] Custom dataset upload
 
 ## 📝 License
 
 MIT License
 
-## 🙏 Acknowledgments
-
-- Dataset: Wisconsin Breast Cancer (UCI ML Repository)
-- Algorithm: sklearn's CART implementation
-- Design inspiration: medical data visualization
-
 ---
 
 **Made with ❤️ for educational purposes**
 
-<<<<<<< HEAD
-*Understanding face recognition through beautiful visualizations*
-=======
-*Understanding decision trees through beautiful visualizations*
->>>>>>> dcf5a6c (Update project files)
->>>>>>> c04665d (Initial project upload)
+*Understanding unsupervised learning through beautiful visualizations*
