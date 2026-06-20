@@ -6,6 +6,10 @@ A **beautiful, interactive visualization** of K-Means clustering on the Breast C
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8?style=flat&logo=tailwindcss)
 
+## 🌐 Live Demo
+
+[View Live Demo](https://k-means-clustering-hruxoukfo-deepthi-portfolio.vercel.app/)
+
 ## 🎯 Overview
 
 This dashboard demonstrates **K-Means clustering** on the Breast Cancer Wisconsin dataset using two features: **mean radius** and **mean texture**. The data is standardized and clustered into k groups, with interactive controls to explore different values of k.
@@ -160,10 +164,6 @@ kmeans-visualizer/
 ### Preprocessing
 - **StandardScaler**: Zero mean, unit variance per feature
 - Critical for distance-based algorithms
-
-## 🌐 Live Demo
-
-[View Live Demo](https://kmeans-visualizer.vercel.app)
 
 ## 🤝 Contributing
 
